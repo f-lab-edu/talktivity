@@ -60,3 +60,5 @@ http://localhost:3000 을 엽니다. `.env` 없이 모의 분석, 예시 대화,
 일반 브라우저는 다운로드, 카카오톡/인스타그램 내부 브라우저는 길게 눌러 저장하는
 이미지 모달을 제공합니다. 로그인, DB, 실제 결제는 없습니다.
 Pretendard Bold OTF와 SIL OFL 라이선스는 `assets/`에 포함되어 외부 폰트 요청이 없습니다.
+캐릭터 SVG는 Twemoji (CC BY 4.0, jdecked/twemoji)이며 `public/characters/`에
+라이선스와 함께 포함했습니다. 이모지 글꼴이 없는 기기에서도 동일하게 표시합니다.

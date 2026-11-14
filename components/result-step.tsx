@@ -85,7 +85,7 @@ export function ResultStep({ data, onRestart }: { readonly data: AnalysisRespons
         </button>)}
     </section>
     <Button variant="ghost" className="full-width restart" onClick={onRestart}><RotateCcw size={16} /> 다른 대화도 분석하기</Button>
-    <Dialog open={teaser} onOpenChange={setTeaser}><DialogContent><DialogTitle>곧 오픈될 서비스입니다!</DialogTitle><DialogDescription>1차 MVP 테스트 중이에요. 조금만 기다려 주세요.</DialogDescription></DialogContent></Dialog>
+    <Dialog open={teaser} onOpenChange={setTeaser}><DialogContent><DialogTitle>곧 오픈될 서비스입니다!</DialogTitle>          <DialogDescription>(1차 MVP 테스트 중) 조금만 기다려 주세요.</DialogDescription></DialogContent></Dialog>
     <Dialog open={preview !== null} onOpenChange={(open) => { if (!open) setPreview(null); }}>
       <DialogContent><DialogTitle>이미지를 길게 눌러 저장하세요</DialogTitle><DialogDescription>아래 캐릭터 카드를 길게 누르면 사진첩에 저장할 수 있어요.</DialogDescription>
         {preview &&             <Image src={preview} alt="저장할 나의 톡 캐릭터 카드" className="save-preview" width={800} height={1300} unoptimized />}

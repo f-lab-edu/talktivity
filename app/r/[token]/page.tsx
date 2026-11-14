@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { SharedResult } from "@/components/shared-result";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function SharedPage({ params }: Props) {
   const { token } = await params;
   const payload = await verifyToken(token, shareSecret());
-  if (!payload) return <section className="invalid-step"><span aria-hidden="true">💬</span><h1>이 결과는 찾을 수 없어요</h1><p>링크가 바뀌었거나 올바르지 않아요.<br />내 톡 캐릭터를 직접 만나 볼까요?</p><Button asChild><Link href="/">나도 무료로 팩폭 분석하기</Link></Button></section>;
+  if (!payload) return <section className="invalid-step">        <MessageCircle size={68} strokeWidth={1.5} className="mx-auto" aria-hidden="true" /><h1>이 결과는 찾을 수 없어요</h1><p>링크가 바뀌었거나 올바르지 않아요.<br />내 톡 캐릭터를 직접 만나 볼까요?</p><Button asChild><Link href="/">나도 무료로 팩폭 분석하기</Link></Button></section>;
   return <SharedResult payload={payload} />;
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
+import { MessageCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const messages = ["카톡 말투 감정 분석 중...", "밀당 주도권 스탯 계산 중...", "팩폭 캐릭터 생성 중..."] as const;
@@ -12,7 +13,7 @@ export function LoadingStep() {
   }, []);
   return <section className="loading-step" role="status" aria-live="polite">
     <motion.div className="loading-orb" animate={{ rotate: [0, -8, 8, 0], scale: [1, 1.05, 1] }} transition={{ duration: 2.4, repeat: Infinity }}>
-      <span aria-hidden="true">💬</span>
+      <MessageCircle size={58} strokeWidth={1.5} aria-hidden="true" />
     </motion.div>
     <p className="eyebrow">말투 속 숨은 나를 찾는 중</p>
     <h1 className="loading-title">{messages[index]}</h1>
