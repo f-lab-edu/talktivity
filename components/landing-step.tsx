@@ -55,7 +55,7 @@ export function LandingStep({
       <div className="landing-actions">
         <Button onClick={onStart}>
           무료로 내 톡 팩폭 보기 <ArrowRight size={18} />
-          <small>(가입 없이 3초 소요)</small>
+          <small>(카톡 캡처 한 장이면 끝)</small>
         </Button>
         <Button variant="ghost" onClick={onExample}>
           예시 대화로 1초 만에 테스트하기 <ArrowRight size={15} />

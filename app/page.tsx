@@ -8,6 +8,7 @@ import { ResultStep } from "@/components/result-step";
 import { track } from "@/lib/analytics";
 import { maskPII } from "@/lib/core/mask";
 import { type AnalysisRequest, errorSchema, responseSchema } from "@/lib/core/schema";
+import { clearDraft } from "@/lib/draft";
 import { flowReducer } from "@/lib/flow";
 
 export default function Home() {
@@ -20,6 +21,8 @@ export default function Home() {
       if (saved) {
         const parsed = responseSchema.safeParse(JSON.parse(saved));
         if (parsed.success) dispatch({ type: "result", data: parsed.data });
+      } else if (sessionStorage.getItem("talktivity:step") === "input") {
+        dispatch({ type: "input" });
       }
     } catch (error) {
       if (!(error instanceof Error)) throw error;
@@ -29,6 +32,13 @@ export default function Home() {
   }, []);
   useEffect(() => {
     if (state.step !== "landing") window.scrollTo(0, 0);
+    // Returning from the KakaoTalk app may reload the tab; reopen the input step then.
+    try {
+      if (state.step === "input") sessionStorage.setItem("talktivity:step", "input");
+      else if (state.step !== "loading") sessionStorage.removeItem("talktivity:step");
+    } catch (error) {
+      if (!(error instanceof Error)) throw error;
+    }
   }, [state.step]);
   async function run(request?: AnalysisRequest) {
     if (activeRequest.current) return;
@@ -70,7 +80,10 @@ export default function Home() {
         return;
       }
       const data = responseSchema.parse(json);
-      if (request) track("analyze_success");
+      if (request) {
+        track("analyze_success");
+        clearDraft();
+      }
       dispatch({ type: "result", data });
       try {
         sessionStorage.setItem("talktivity:last-result", JSON.stringify(data));

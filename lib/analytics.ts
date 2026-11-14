@@ -3,6 +3,10 @@
 type Events = {
   readonly landing_view: undefined;
   readonly cta_click: { readonly variant: "main" | "example" };
+  readonly input_mode_text: undefined;
+  readonly extract_submit: { readonly count: number };
+  readonly extract_success: undefined;
+  readonly extract_error: { readonly code: string };
   readonly analyze_submit: undefined;
   readonly analyze_success: undefined;
   readonly analyze_error: { readonly code: string };
