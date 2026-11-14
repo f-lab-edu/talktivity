@@ -16,7 +16,14 @@ export function ResultCard({ payload, shared = false }: { readonly payload: Shar
     <div className="stats">{Object.entries(labels).map(([key, label]) => {
       const value = key === "initiative" ? payload.stats.initiative : key === "replyPsychology" ? payload.stats.replyPsychology : payload.stats.pushPull;
       return <div className="stat" key={key}><div><span>{label}</span><strong>{value}{key === "replyPsychology" ? "점" : "%"}</strong></div>
-        <div className="stat-track" role="meter" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={value}>
+                      <meter
+                className="sr-only"
+                aria-label={label}
+                min={0}
+                max={100}
+                value={value}
+              />
+              <div className="stat-track" aria-hidden="true">
           <motion.div initial={{ width: 0 }} animate={{ width: `${value}%` }} transition={{ duration: 0.7 }} />
         </div>
       </div>;

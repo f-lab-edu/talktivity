@@ -5,8 +5,7 @@ export const relationships = ["썸남/썸녀", "연인", "단짝 친구", "회�
 export const conversationSchema = z.string()
   .min(10, "대화를 10자 이상 입력해 주세요.")
   .max(1500, "대화는 1,500자까지 입력할 수 있어요.")
-  .refine((text) => text.split(/\r?\n/).filter((line) => line.trim()).length >= 2,
-    "비어 있지 않은 대화를 두 줄 이상 입력해 주세요.");
+  .regex(/\S[^\r\n]*\r?\n[\s\S]*\S/, "비어 있지 않은 대화를 두 줄 이상 입력해 주세요.");
 export const requestSchema = z.object({
   conversation: conversationSchema,
   relationship: z.enum(relationships, { error: "관계를 선택해 주세요." }),

@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "characterId": {
+      "type": "string",
+      "enum": [
+        "flirt",
+        "cool",
+        "answer",
+        "guardian",
+        "sunshine",
+        "detective",
+        "emoji",
+        "novelist",
+        "minimalist",
+        "comedian",
+        "planner",
+        "nightowl"
+      ]
+    },
+    "roastLines": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        }
+      ],
+      "items": false,
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "stats": {
+      "type": "object",
+      "properties": {
+        "initiative": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "replyPsychology": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "pushPull": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        }
+      },
+      "required": [
+        "initiative",
+        "replyPsychology",
+        "pushPull"
+      ],
+      "additionalProperties": false
+    },
+    "reading": {
+      "type": "object",
+      "properties": {
+        "loveFortune": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tips": {
+          "minItems": 3,
+          "maxItems": 3,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "recommendedLines": {
+          "minItems": 2,
+          "maxItems": 3,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "loveFortune",
+        "tips",
+        "recommendedLines"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "characterId",
+    "roastLines",
+    "stats",
+    "reading"
+  ],
+  "additionalProperties": false
+}

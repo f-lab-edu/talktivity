@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "conversation": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 1500,
+      "pattern": "\\S[^\\r\\n]*\\r?\\n[\\s\\S]*\\S"
+    },
+    "relationship": {
+      "type": "string",
+      "enum": [
+        "썸남/썸녀",
+        "연인",
+        "단짝 친구",
+        "회사 동료"
+      ]
+    },
+    "mySpeaker": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    }
+  },
+  "required": [
+    "conversation",
+    "relationship"
+  ],
+  "additionalProperties": false
+}

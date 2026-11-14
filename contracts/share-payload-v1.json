@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "number",
+      "const": 1
+    },
+    "characterId": {
+      "type": "string",
+      "enum": [
+        "flirt",
+        "cool",
+        "answer",
+        "guardian",
+        "sunshine",
+        "detective",
+        "emoji",
+        "novelist",
+        "minimalist",
+        "comedian",
+        "planner",
+        "nightowl"
+      ]
+    },
+    "stats": {
+      "type": "object",
+      "properties": {
+        "initiative": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "replyPsychology": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "pushPull": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        }
+      },
+      "required": [
+        "initiative",
+        "replyPsychology",
+        "pushPull"
+      ],
+      "additionalProperties": false
+    },
+    "roastLines": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        }
+      ],
+      "items": false,
+      "minItems": 3,
+      "maxItems": 3
+    }
+  },
+  "required": [
+    "version",
+    "characterId",
+    "stats",
+    "roastLines"
+  ],
+  "additionalProperties": false
+}

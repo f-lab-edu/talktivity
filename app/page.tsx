@@ -28,7 +28,8 @@ export default function Home() {
     }
     return () => activeRequest.current?.abort();
   }, []);
-  useEffect(() => { window.scrollTo(0, 0); }, [state.step]);
+    useEffect(() => {
+    if (state.step !== "landing") window.scrollTo(0, 0); }, [state.step]);
   async function run(request?: AnalysisRequest) {
     if (activeRequest.current) return;
     const controller = new AbortController();
