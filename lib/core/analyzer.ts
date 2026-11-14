@@ -1,14 +1,23 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";
 import { generateText, Output } from "ai";
+import { z } from "zod";
 import { characters } from "./characters";
 import { mockAnalyze } from "./mock-analyzer";
 import { type AnalysisRequest, type AnalysisResult, resultSchema } from "./schema";
+
+// Some providers (Gemini) reject tuple JSON Schemas, so the model sees a fixed-length
+// array; the output is still validated against the tuple-based resultSchema below.
+const llmOutputSchema = resultSchema.extend({
+  roastLines: z.array(z.string().min(1).max(60)).length(3),
+});
 
 export type AnalyzerConfig = {
   readonly provider?: string | undefined;
   readonly anthropicKey?: string | undefined;
   readonly openaiKey?: string | undefined;
+  readonly googleKey?: string | undefined;
   readonly model?: string | undefined;
 };
 
@@ -21,13 +30,17 @@ export async function analyze(
       ? createAnthropic({ apiKey: config.anthropicKey })(config.model || "claude-haiku-5-5")
       : config.provider === "openai" && config.openaiKey
         ? createOpenAI({ apiKey: config.openaiKey })(config.model || "gpt-5.4-mini")
-        : null;
+        : config.provider === "google" && config.googleKey
+          ? createGoogleGenerativeAI({ apiKey: config.googleKey })(
+              config.model || "gemini-3.5-flash-lite",
+            )
+          : null;
   if (!model) return mockAnalyze(request);
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const response = await generateText({
         model,
-        output: Output.object({ schema: resultSchema }),
+        output: Output.object({ schema: llmOutputSchema }),
         maxRetries: 0,
         abortSignal: AbortSignal.timeout(20_000),
         system: `당신은 한국어 카톡 말투 분석가입니다. 재치 있고 가벼운 2030 말투로 분석하세요.

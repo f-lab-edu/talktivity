@@ -42,6 +42,7 @@ export async function POST(request: Request) {
         provider: process.env.LLM_PROVIDER,
         anthropicKey: process.env.ANTHROPIC_API_KEY,
         openaiKey: process.env.OPENAI_API_KEY,
+        googleKey: process.env.GEMINI_API_KEY,
         model: process.env.LLM_MODEL,
       }),
     );
