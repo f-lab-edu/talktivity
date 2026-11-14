@@ -1,27 +1,129 @@
-.result-heading { text-align: center; margin: 8px 0 20px; }
-.result-heading p { margin-top: 10px; font-size: 13px; color: var(--muted); }
-.badge { display: inline-flex; border-radius: 100px; background: #eaf0dd; color: #495e27; padding: 4px 10px; font-size: 11px; font-weight: 700; }
-.result-card { padding: 25px 24px 20px; border-radius: 28px; color: #242822; }
-.card-top { display: flex; justify-content: space-between;   font-size: 11px; font-weight: 700; letter-spacing: 1px; }
-.character-emoji { text-align: center; font-size: 88px; line-height: 1.6;   padding-top: 10px;
+.result-heading {
+  text-align: center;
+  margin: 8px 0 20px;
+}
+.result-heading p {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.badge {
+  display: inline-flex;
+  border-radius: 100px;
+  background: #eaf0dd;
+  color: #495e27;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.result-card {
+  padding: 25px 24px 20px;
+  border-radius: 28px;
+  color: #242822;
+}
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.character-emoji {
+  text-align: center;
+  font-size: 88px;
+  line-height: 1.6;
+  padding-top: 10px;
   display: flex;
   justify-content: center;
   padding-bottom: 20px;
 }
-.character-tagline { font-size: 12px; text-align: center; color: #4b4c42; }
-.result-card h2 { font-size: 29px; letter-spacing: -1px; text-align: center; margin: 8px 0 23px; overflow-wrap: anywhere; }
-.roast-lines { border-top: 1px solid #24282225; padding-top: 18px; font-size: 13px; line-height: 1.8; word-break: keep-all; overflow-wrap: anywhere; }
-.roast-lines :where(p + p) { margin-top: 6px; }
-.stats { margin-top: 25px; display: grid; gap: 16px; }
-.stat > div:first-child { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
-.stat-track { height: 7px; border-radius: 10px; background: #ffffff80; overflow: hidden; }
-.stat-track > div { height: 100%; border-radius: 10px; background: #384432; }
-.card-brand { text-align: center; margin-top: 26px;   font-size: 11px; letter-spacing: .1em;   color: #384432; }
-.reading-section { margin: 36px 2px; }
-.reading-section h2 { font-size: 23px; letter-spacing: -.8px; margin: 8px 0 25px; }
-.reading-section h3 { font-size: 14px; margin: 24px 0 10px; }
-.reading-section > p:not(.eyebrow),.reading-section li { font-size: 14px; line-height: 1.9; color: #565c50; }
-.reading-section ol { margin: 0; padding-left: 20px; }
-.reading-section li + li { margin-top: 9px; padding-left: 4px; }
-.recommended-lines { display: grid; gap: 10px; }
-.recommended-lines blockquote { margin: 0; padding: 16px; background: #eef0e6; border-left: 3px solid #a6bd6b; border-radius: 0 12px 12px 0; font-size: 13px; }
+.character-tagline {
+  font-size: 12px;
+  text-align: center;
+  color: #4b4c42;
+}
+.result-card h2 {
+  font-size: 29px;
+  letter-spacing: -1px;
+  text-align: center;
+  margin: 8px 0 23px;
+  overflow-wrap: anywhere;
+}
+.roast-lines {
+  border-top: 1px solid #24282225;
+  padding-top: 18px;
+  font-size: 13px;
+  line-height: 1.8;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.roast-lines :where(p + p) {
+  margin-top: 6px;
+}
+.stats {
+  margin-top: 25px;
+  display: grid;
+  gap: 16px;
+}
+.stat > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+.stat-track {
+  height: 7px;
+  border-radius: 10px;
+  background: #ffffff80;
+  overflow: hidden;
+}
+.stat-track > div {
+  height: 100%;
+  border-radius: 10px;
+  background: #384432;
+}
+.card-brand {
+  text-align: center;
+  margin-top: 26px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: #384432;
+}
+.reading-section {
+  margin: 36px 2px;
+}
+.reading-section h2 {
+  font-size: 23px;
+  letter-spacing: -0.8px;
+  margin: 8px 0 25px;
+}
+.reading-section h3 {
+  font-size: 14px;
+  margin: 24px 0 10px;
+}
+.reading-section > p:not(.eyebrow),
+.reading-section li {
+  font-size: 14px;
+  line-height: 1.9;
+  color: #565c50;
+}
+.reading-section ol {
+  margin: 0;
+  padding-left: 20px;
+}
+.reading-section li + li {
+  margin-top: 9px;
+  padding-left: 4px;
+}
+.recommended-lines {
+  display: grid;
+  gap: 10px;
+}
+.recommended-lines blockquote {
+  margin: 0;
+  padding: 16px;
+  background: #eef0e6;
+  border-left: 3px solid #a6bd6b;
+  border-radius: 0 12px 12px 0;
+  font-size: 13px;
+}

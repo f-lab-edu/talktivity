@@ -10,12 +10,21 @@ import { characters } from "@/lib/core/characters";
 import type { SharePayload } from "@/lib/core/share-token";
 
 export function SharedResult({ payload }: { readonly payload: SharePayload }) {
-  useEffect(() => { track("shared_page_view", { characterId: payload.characterId }); }, [payload.characterId]);
-  return <section className="shared-step">
-    <p className="eyebrow">친구의 결과</p><h1 className="step-title">이런 톡 본캐였구나!</h1>
-    <ResultCard payload={payload} shared />
-    <p className="shared-description">{characters[payload.characterId].description}</p>
-    <Button asChild className="full-width"><Link href="/" onClick={() => track("shared_page_cta_click")}>나도 무료로 팩폭 분석하기 <ArrowRight size={18} /></Link></Button>
-    <p className="privacy center">가입 없이, 내 대화는 저장 없이.</p>
-  </section>;
+  useEffect(() => {
+    track("shared_page_view", { characterId: payload.characterId });
+  }, [payload.characterId]);
+  return (
+    <section className="shared-step">
+      <p className="eyebrow">친구의 결과</p>
+      <h1 className="step-title">이런 톡 본캐였구나!</h1>
+      <ResultCard payload={payload} shared />
+      <p className="shared-description">{characters[payload.characterId].description}</p>
+      <Button asChild className="full-width">
+        <Link href="/" onClick={() => track("shared_page_cta_click")}>
+          나도 무료로 팩폭 분석하기 <ArrowRight size={18} />
+        </Link>
+      </Button>
+      <p className="privacy center">가입 없이, 내 대화는 저장 없이.</p>
+    </section>
+  );
 }

@@ -20,17 +20,17 @@ http://localhost:3000 을 엽니다. `.env` 없이 모의 분석, 예시 대화,
 
 `.env.example`을 `.env.local`로 복사해서 필요한 값만 설정하세요.
 
-| 변수 | 용도와 기본 동작 |
-| --- | --- |
-| `LLM_PROVIDER` | `mock`(기본), `anthropic`, `openai` |
-| `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` | 선택한 공급자 키가 없으면 결정적 mock |
-| `LLM_MODEL` | SDK 목록 기준 `claude-haiku-5-5` / `gpt-5.4-mini`, 변경 가능 |
-| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | 둘 다 없으면 인스턴스 메모리 제한, 운영 시 Redis 설정 |
-| `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST` | 둘 다 있어야 이벤트 수집, 자동 클릭/세션 녹화 비활성 |
-| `NEXT_PUBLIC_KAKAO_JS_KEY` | 없으면 Web Share, 미지원이면 링크 복사 |
-| `SHARE_TOKEN_SECRET` | 개발용 대체값 제공. 운영 시작 시 필수, 변경하면 기존 링크 무효 |
-| `NEXT_PUBLIC_SITE_URL` | 기본 `http://localhost:3000`, 배포 시 실제 HTTPS 도메인 |
-| `NEXT_PUBLIC_API_BASE_URL` | 기본 빈 문자열, REST API 분리 시 사용 |
+| 변수                                                    | 용도와 기본 동작                                                   |
+| ------------------------------------------------------- | ------------------------------------------------------------------ |
+| `LLM_PROVIDER`                                        | `mock`(기본), `anthropic`, `openai`                            |
+| `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`                 | 선택한 공급자 키가 없으면 결정적 mock                          |
+| `LLM_MODEL`                                           | SDK 목록 기준 `claude-haiku-5-5` / `gpt-5.4-mini`, 변경 가능   |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`    | 둘 다 없으면 인스턴스 메모리 제한, 운영 시 Redis 설정              |
+| `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST`   | 둘 다 있어야 이벤트 수집, 자동 클릭/세션 녹화 비활성               |
+| `NEXT_PUBLIC_KAKAO_JS_KEY`                              | 없으면 Web Share, 미지원이면 링크 복사                             |
+| `SHARE_TOKEN_SECRET`                                    | 개발용 대체값 제공. 운영 시작 시 필수, 변경하면 기존 링크 무효     |
+| `NEXT_PUBLIC_SITE_URL`                                  | 기본 `http://localhost:3000`, 배포 시 실제 HTTPS 도메인            |
+| `NEXT_PUBLIC_API_BASE_URL`                              | 기본 빈 문자열, REST API 분리 시 사용                              |
 
 빌드는 키 없이 가능합니다. 운영 실행은 `SHARE_TOKEN_SECRET`을 설정한 다음
 `bun run build && bun run start`를 사용합니다.

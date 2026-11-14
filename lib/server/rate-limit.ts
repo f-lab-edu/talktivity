@@ -5,13 +5,18 @@ const windowMs = 10 * 60 * 1000;
 // Mutable per-instance request window. Expired entries are removed on each request.
 const buckets = new Map<string, { count: number; reset: number }>();
 let warned = false;
-const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-  ? new Ratelimit({
-      redis: new Redis({ url: process.env.UPSTASH_REDIS_REST_URL, token: process.env.UPSTASH_REDIS_REST_TOKEN }),
-      limiter: Ratelimit.slidingWindow(10, "10 m"),
-      analytics: false,
-      prefix: "talktivity",
-    }) : null;
+const redis =
+  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+    ? new Ratelimit({
+        redis: new Redis({
+          url: process.env.UPSTASH_REDIS_REST_URL,
+          token: process.env.UPSTASH_REDIS_REST_TOKEN,
+        }),
+        limiter: Ratelimit.slidingWindow(10, "10 m"),
+        analytics: false,
+        prefix: "talktivity",
+      })
+    : null;
 
 export async function rateLimit(ip: string) {
   if (redis) return redis.limit(ip);

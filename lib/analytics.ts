@@ -16,16 +16,26 @@ type Events = {
 };
 const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 const host = process.env.NEXT_PUBLIC_POSTHOG_HOST;
-const client = key && host
-  ? import("posthog-js").then(({ default: posthog }) => {
-      posthog.init(key, {
-        api_host: host, autocapture: false, capture_pageview: false,
-        capture_pageleave: false, disable_session_recording: true, persistence: "memory",
-      });
-      return posthog;
-    }) : null;
+const client =
+  key && host
+    ? import("posthog-js").then(({ default: posthog }) => {
+        posthog.init(key, {
+          api_host: host,
+          autocapture: false,
+          capture_pageview: false,
+          capture_pageleave: false,
+          disable_session_recording: true,
+          persistence: "memory",
+        });
+        return posthog;
+      })
+    : null;
 
-export function track<E extends keyof Events>(event: E, ...args: Events[E] extends undefined ? [] : [Events[E]]) {
+export function track<E extends keyof Events>(
+  event: E,
+  ...args: Events[E] extends undefined ? [] : [Events[E]]
+) {
   if (client) void client.then((posthog) => posthog.capture(event, args[0]));
-  else if (process.env.NODE_ENV === "development") console.debug("[분석 이벤트]", event, args[0] ?? {});
+  else if (process.env.NODE_ENV === "development")
+    console.debug("[분석 이벤트]", event, args[0] ?? {});
 }

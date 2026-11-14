@@ -5,12 +5,24 @@ import { cn } from "@/lib/utils";
 
 const buttonVariants = cva("button", {
   variants: {
-    variant: { default: "button-primary", outline: "button-outline", ghost: "button-ghost", kakao: "button-kakao" },
+    variant: {
+      default: "button-primary",
+      outline: "button-outline",
+      ghost: "button-ghost",
+      kakao: "button-kakao",
+    },
   },
   defaultVariants: { variant: "default" },
 });
-export function Button({ className, variant, asChild = false, ...props }:
-  ComponentProps<"button"> & VariantProps<typeof buttonVariants> & { readonly asChild?: boolean }) {
+export function Button({
+  className,
+  variant,
+  asChild = false,
+  ...props
+}: ComponentProps<"button"> &
+  VariantProps<typeof buttonVariants> & { readonly asChild?: boolean }) {
   const Comp = asChild ? Slot : "button";
-  return <Comp data-slot="button" className={cn(buttonVariants({ variant, className }))} {...props} />;
+  return (
+    <Comp data-slot="button" className={cn(buttonVariants({ variant, className }))} {...props} />
+  );
 }

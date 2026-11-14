@@ -16,17 +16,29 @@ async function curl(args: readonly string[]) {
   return { body: output.slice(0, boundary), status: Number(output.slice(boundary + 1)) };
 }
 await mkdir("artifacts", { recursive: true });
-const analysis = await curl(["-H", "Content-Type: application/json", "-H", "x-forwarded-for: 198.51.100.21", "-d", sample, `${origin}/api/analyze`]);
+const analysis = await curl([
+  "-H",
+  "Content-Type: application/json",
+  "-H",
+  "x-forwarded-for: 198.51.100.21",
+  "-d",
+  sample,
+  `${origin}/api/analyze`,
+]);
 assert.equal(analysis.status, 200);
 const response = responseSchema.parse(JSON.parse(analysis.body));
 assert.ok(await verifyToken(response.shareToken, "talktivity-development-only-secret-v1"));
 await writeFile("artifacts/analyze.json", `${JSON.stringify(response, null, 2)}\n`);
-console.log(`POST /api/analyze: ${analysis.status}; result=${response.result.characterId}; valid shareToken=true`);
+console.log(
+  `POST /api/analyze: ${analysis.status}; result=${response.result.characterId}; valid shareToken=true`,
+);
 
 const shared = await curl(["-A", "facebookexternalhit/1.1", `${origin}/r/${response.shareToken}`]);
 assert.equal(shared.status, 200);
 assert.match(shared.body, /property="og:title"/);
-const image = shared.body.match(/property="og:image" content="([^"]+)"/)?.[1]?.replaceAll("&amp;", "&");
+const image = shared.body
+  .match(/property="og:image" content="([^"]+)"/)?.[1]
+  ?.replaceAll("&amp;", "&");
 assert.ok(image);
 assert.ok(shared.body.includes("친구의 결과"));
 console.log("GET /r/<token>: 200; og:title=true; og:image=true; 친구의 결과=true");
@@ -42,12 +54,26 @@ const tampered = await curl([`${origin}/r/${badToken}`]);
 assert.equal(tampered.status, 200);
 assert.ok(tampered.body.includes("이 결과는 찾을 수 없어요"));
 console.log("GET /r/<tampered-token>: 200; friendly error page=true");
-const malformed = await curl(["-H", "Content-Type: application/json", "-d", "{}", `${origin}/api/analyze`]);
+const malformed = await curl([
+  "-H",
+  "Content-Type: application/json",
+  "-d",
+  "{}",
+  `${origin}/api/analyze`,
+]);
 assert.equal(malformed.status, 400);
 console.log("POST /api/analyze {}: 400; structured error=true");
 const statuses: number[] = [];
 for (let i = 0; i < 11; i++) {
-  const response = await curl(["-H", "Content-Type: application/json", "-H", "x-forwarded-for: 198.51.100.77", "-d", sample, `${origin}/api/analyze`]);
+  const response = await curl([
+    "-H",
+    "Content-Type: application/json",
+    "-H",
+    "x-forwarded-for: 198.51.100.77",
+    "-d",
+    sample,
+    `${origin}/api/analyze`,
+  ]);
   statuses.push(response.status);
 }
 assert.deepEqual(statuses, [...Array<number>(10).fill(200), 429]);

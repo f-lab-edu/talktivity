@@ -8,10 +8,35 @@ import { requestSchema, resultSchema } from "../lib/core/schema";
 
 describe("대화 파서", () => {
   it.each([
-    ["[민수] [오후 3:12] 안녕\n[지수] [오후 3:13] 반가워", [{ speaker: "민수", text: "안녕" }, { speaker: "지수", text: "반가워" }]],
-    ["2026년 11월 14일 오후 3:12, 민수 : 안녕\n2026년 11월 14일 오후 3:13, 지수 : 반가워", [{ speaker: "민수", text: "안녕" }, { speaker: "지수", text: "반가워" }]],
-    ["민수:안녕\n지수: 반가워", [{ speaker: "민수", text: "안녕" }, { speaker: "지수", text: "반가워" }]],
-    ["첫 문장\n민수: 안녕\n다음 줄\n\n지수: 반가워", [{ speaker: null, text: "첫 문장" }, { speaker: "민수", text: "안녕\n다음 줄" }, { speaker: "지수", text: "반가워" }]],
+    [
+      "[민수] [오후 3:12] 안녕\n[지수] [오후 3:13] 반가워",
+      [
+        { speaker: "민수", text: "안녕" },
+        { speaker: "지수", text: "반가워" },
+      ],
+    ],
+    [
+      "2026년 11월 14일 오후 3:12, 민수 : 안녕\n2026년 11월 14일 오후 3:13, 지수 : 반가워",
+      [
+        { speaker: "민수", text: "안녕" },
+        { speaker: "지수", text: "반가워" },
+      ],
+    ],
+    [
+      "민수:안녕\n지수: 반가워",
+      [
+        { speaker: "민수", text: "안녕" },
+        { speaker: "지수", text: "반가워" },
+      ],
+    ],
+    [
+      "첫 문장\n민수: 안녕\n다음 줄\n\n지수: 반가워",
+      [
+        { speaker: null, text: "첫 문장" },
+        { speaker: "민수", text: "안녕\n다음 줄" },
+        { speaker: "지수", text: "반가워" },
+      ],
+    ],
     ["https://example.com\n어때?", [{ speaker: null, text: "https://example.com\n어때?" }]],
   ])("복사 형식에서 화자와 이어지는 내용을 보존한다: %s", (input, expected) => {
     expect(parseKakao(input)).toEqual(expected);
@@ -29,9 +54,14 @@ describe("개인정보 마스킹", () => {
     ["https://example.com/a?b=1 www.example.com", "[링크] [링크]"],
     ["계좌 123-456-789012 송금", "계좌 [계좌번호] 송금"],
     ["내일 3시에 보자", "내일 3시에 보자"],
-  ])("개인정보만 제거한다: %s", (input, expected) => { expect(maskPII(input)).toBe(expected); });
+  ])("개인정보만 제거한다: %s", (input, expected) => {
+    expect(maskPII(input)).toBe(expected);
+  });
   it("선택한 화자를 나로 바꾸고 본문의 실제 이름도 제거한다", () => {
-    const output = prepareConversation("민수: 지수야 010-1234-5678로 연락해\n지수: 민수야 알겠어", "민수");
+    const output = prepareConversation(
+      "민수: 지수야 010-1234-5678로 연락해\n지수: 민수야 알겠어",
+      "민수",
+    );
     expect(output).toBe("나: 상대야 [전화번호]로 연락해\n상대: 나야 알겠어");
   });
   it("이미 가린 대화를 다시 처리해도 개인정보가 복원되지 않는다", () => {
@@ -52,7 +82,10 @@ describe("입력 및 결과 계약", () => {
     expect(requestSchema.safeParse({ conversation, relationship: "연인" }).success).toBe(success);
   });
   it("허용되지 않은 관계를 거절한다", () => {
-    expect(requestSchema.safeParse({ conversation: "안녕하세요\n반가워요", relationship: "모르는 사이" }).success).toBe(false);
+    expect(
+      requestSchema.safeParse({ conversation: "안녕하세요\n반가워요", relationship: "모르는 사이" })
+        .success,
+    ).toBe(false);
   });
   it.each([
     { ...exampleResult, characterId: "unknown" },
@@ -61,20 +94,30 @@ describe("입력 및 결과 계약", () => {
     { ...exampleResult, stats: { initiative: 101, replyPsychology: 1, pushPull: 2 } },
     { ...exampleResult, stats: { initiative: 0.5, replyPsychology: 1, pushPull: 2 } },
     { ...exampleResult, reading: { ...exampleResult.reading, tips: ["하나"] } },
-  ])("잘못된 분석 결과를 거절한다", (result) => { expect(resultSchema.safeParse(result).success).toBe(false); });
+  ])("잘못된 분석 결과를 거절한다", (result) => {
+    expect(resultSchema.safeParse(result).success).toBe(false);
+  });
 });
 
 describe("분석기", () => {
-  const request = { conversation: "나: 오늘 뭐 해?\n상대: 나 오늘 쉬어", relationship: "연인" } as const;
+  const request = {
+    conversation: "나: 오늘 뭐 해?\n상대: 나 오늘 쉬어",
+    relationship: "연인",
+  } as const;
   it("같은 입력은 유효하고 동일한 모의 결과를 만든다", () => {
     const result = mockAnalyze(request);
     expect(resultSchema.safeParse(result).success).toBe(true);
     expect(mockAnalyze({ ...request })).toEqual(result);
   });
   it("다른 입력은 모의 스탯에 반영한다", () => {
-    expect(mockAnalyze({ ...request, conversation: "오늘은 또 다른 대화\n반가워 정말!" }).stats).not.toEqual(mockAnalyze(request).stats);
+    expect(
+      mockAnalyze({ ...request, conversation: "오늘은 또 다른 대화\n반가워 정말!" }).stats,
+    ).not.toEqual(mockAnalyze(request).stats);
   });
-  it.each([{ provider: "mock" }, { provider: "anthropic" }, { provider: "openai" }, {}])("키가 없으면 외부 요청 없이 모의 분석을 한다", async (config) => {
-    expect(await analyze(request, config)).toEqual(mockAnalyze(request));
-  });
+  it.each([{ provider: "mock" }, { provider: "anthropic" }, { provider: "openai" }, {}])(
+    "키가 없으면 외부 요청 없이 모의 분석을 한다",
+    async (config) => {
+      expect(await analyze(request, config)).toEqual(mockAnalyze(request));
+    },
+  );
 });

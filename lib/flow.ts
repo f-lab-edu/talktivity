@@ -13,11 +13,19 @@ type Action =
   | { readonly type: "error"; readonly message: string };
 export function flowReducer(_state: FlowState, action: Action): FlowState {
   switch (action.type) {
-    case "input": return { step: "input", error: null };
-    case "landing": return { step: "landing" };
-    case "loading": return { step: "loading" };
-    case "result": return { step: "result", data: action.data };
-    case "error": return { step: "input", error: action.message };
-    default: { const exhaustive: never = action; return exhaustive; }
+    case "input":
+      return { step: "input", error: null };
+    case "landing":
+      return { step: "landing" };
+    case "loading":
+      return { step: "loading" };
+    case "result":
+      return { step: "result", data: action.data };
+    case "error":
+      return { step: "input", error: action.message };
+    default: {
+      const exhaustive: never = action;
+      return exhaustive;
+    }
   }
 }

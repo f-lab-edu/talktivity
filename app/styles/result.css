@@ -1,13 +1,65 @@
-.share-actions { display: grid; gap: 10px; }
-.two-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.two-buttons .button { font-size: 12px; padding-inline: 8px; }
-.action-notice { color: #52672d; min-height: 26px; font-size: 12px; text-align: center; padding-top: 9px; }
-.paywall { margin-top: 32px; padding-top: 28px; border-top: 1px solid var(--line); }
-.section-label { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
-.section-label h2 { font-size: 18px; letter-spacing: -.5px; }
-.teaser-card { display: flex; align-items: center; text-align: left; gap: 12px; width: 100%; background: #f0f0e9; border: 1px solid var(--line); border-radius: 16px; padding: 18px 14px; margin-top: 12px; font-size: 12px; }
-.teaser-card svg { flex-shrink: 0; color: #737d64; }
-.teaser-card span { flex: 1; }
-.teaser-card strong { white-space: nowrap; font-size: 12px; }
-.teaser-card:hover { background: #e9eddf; }
-.restart { margin-top: 22px; }
+.share-actions {
+  display: grid;
+  gap: 10px;
+}
+.two-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.two-buttons .button {
+  font-size: 12px;
+  padding-inline: 8px;
+}
+.action-notice {
+  color: #52672d;
+  min-height: 26px;
+  font-size: 12px;
+  text-align: center;
+  padding-top: 9px;
+}
+.paywall {
+  margin-top: 32px;
+  padding-top: 28px;
+  border-top: 1px solid var(--line);
+}
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.section-label h2 {
+  font-size: 18px;
+  letter-spacing: -0.5px;
+}
+.teaser-card {
+  display: flex;
+  align-items: center;
+  text-align: left;
+  gap: 12px;
+  width: 100%;
+  background: #f0f0e9;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 18px 14px;
+  margin-top: 12px;
+  font-size: 12px;
+}
+.teaser-card svg {
+  flex-shrink: 0;
+  color: #737d64;
+}
+.teaser-card span {
+  flex: 1;
+}
+.teaser-card strong {
+  white-space: nowrap;
+  font-size: 12px;
+}
+.teaser-card:hover {
+  background: #e9eddf;
+}
+.restart {
+  margin-top: 22px;
+}
