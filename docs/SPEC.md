@@ -1,0 +1,195 @@
+# Talktivity (톡티비티) - Implementation Spec
+
+This file is the source of truth for the MVP. It combines the original product brief
+(6-step UX) with the decisions and guardrails agreed during planning.
+
+## Product summary
+
+A 2030 user pastes 3-5 lines of a KakaoTalk conversation and gets a "fact-bomb" (팩폭)
+character card with stats, then shares it to KakaoTalk. Goal: 6 of 10 users who submit
+input reach the result and share or save it.
+
+Out of scope for v1: sign-up/login, real payments, storing conversations in a DB,
+KakaoTalk .txt export parsing.
+
+All user-facing copy is Korean. Mobile-first: content column `max-w-[480px] mx-auto`.
+
+## Stack (decided)
+
+- Next.js 16 (App Router, TypeScript strict), package manager **bun**
+- Tailwind CSS v4, shadcn/ui (only needed components: button, dialog, badge), lucide-react
+- `motion` for loading/stat-bar/card animations
+- Vercel AI SDK (`ai`, `@ai-sdk/anthropic`, `@ai-sdk/openai`) + `zod` v4
+- `html-to-image` for saving the card as PNG (NOT html2canvas: it breaks on Tailwind v4 oklch colors)
+- `next/og` for dynamic OG images, Pretendard font (ttf/otf/woff, not woff2 - satori limitation)
+- `@upstash/ratelimit` + `@upstash/redis` for rate limiting
+- `posthog-js` for funnel analytics
+- Vitest for unit tests, Biome for lint/format
+
+## Architecture rules (portability guardrails)
+
+1. **Framework-free core.** All business logic lives in `lib/core/` as pure TypeScript with
+   zero imports from `next/*` or React: conversation parsing, PII masking, input validation,
+   the result schema, the character catalog, the analyzer (provider adapter + mock),
+   share-token encode/sign/verify. Route handlers and pages are thin shells around it.
+2. **Explicit REST boundary.** The client calls `POST /api/analyze` via `fetch`, using
+   `process.env.NEXT_PUBLIC_API_BASE_URL ?? ""` as the base. No Server Actions anywhere.
+3. **Language-neutral contract.** `zod` schemas are the single source; a script
+   (`bun run export-schema`) writes JSON Schema files to `contracts/` using `z.toJSONSchema`.
+   Commit the generated files.
+4. **Versioned, canonical share token** (see below), with golden test vectors in
+   `tests/golden/` that a future backend in another language can reuse.
+5. Keep Next usage simple: the analysis flow is client components; server features are used
+   only for `/api/analyze`, the shared-result page metadata, and the OG image. No custom caching.
+
+## Graceful degradation (every external key optional)
+
+| Env var | When missing |
+|---|---|
+| `LLM_PROVIDER` (`anthropic`/`openai`/`mock`), `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `LLM_MODEL` | Fall back to the deterministic mock analyzer (hash of input -> stable result) |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | In-memory per-instance limiter (dev only; log a warning once) |
+| `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST` | Analytics wrapper becomes a no-op (console.debug in dev) |
+| `NEXT_PUBLIC_KAKAO_JS_KEY` | Kakao button falls back to Web Share API, then copy-link |
+| `SHARE_TOKEN_SECRET` | Dev-only fixed fallback secret with a warning; in production, throw at startup of the share routes |
+| `NEXT_PUBLIC_SITE_URL` | Default `http://localhost:3000`; used for absolute OG/Kakao image URLs |
+
+Provide `.env.example` documenting all of them. Default models: pick the current cheap tier
+for each provider (Anthropic Haiku-class, OpenAI mini-class) and allow override via `LLM_MODEL`.
+
+## Result schema (`lib/core/schema.ts`)
+
+```
+AnalysisResult {
+  characterId: enum of catalog ids
+  roastLines: [string, string, string]      // 3-line 팩폭 summary, each <= 60 chars
+  stats: {
+    initiative: int 0-100     // 대화 주도권 (%)
+    replyPsychology: int 0-100 // 답장 속도 심리 (점수)
+    pushPull: int 0-100       // 밀당 지수 (%)
+  }
+  reading: {
+    loveFortune: string       // 연애운/대화 운 (2-4 sentences)
+    tips: string[3]           // 대화 팁
+    recommendedLines: string[2-3] // 추천 대화법 (example lines)
+  }
+}
+```
+
+The LLM chooses `characterId` from the catalog and writes the personalized text. Use AI SDK
+structured output (check the installed `ai` v7 API for the current object-generation call;
+do not guess) with this zod schema, validate, retry once on failure, then fall back to the mock.
+
+## Character catalog (`lib/core/characters.ts`)
+
+12 fixed types. Each has: `id`, `name` (Korean, easy to say out loud), `emoji`, `tagline`,
+`color` (hex pair for gradient - use hex, not oklch, so OG rendering and image capture work),
+and a generic `description` shown on the shared page. Include the brief's examples:
+"플러팅 장인", "프레임 유지하는 차도남", "은근히 답정너", "읽씹 방지 파수꾼", plus 8 more in the same tone.
+
+## Input & privacy
+
+- Parser (`lib/core/parse-kakao.ts`) detects speakers in common copy formats:
+  PC `[이름] [오후 3:12] 메시지`, mobile `2026년 11월 14일 오후 3:12, 이름 : 메시지`,
+  simple `이름: 메시지`. Lines that do not match attach to the previous message or are
+  treated as unattributed.
+- If 2+ speakers are detected, the input step shows a "나는 누구?" chip row (required).
+  If 0-1 speakers, skip it and the prompt analyzes the conversation as the user's style.
+- Relationship chips (required): 썸남/썸녀, 연인, 단짝 친구, 회사 동료.
+- Validation: at least 2 non-empty lines, 10-1500 chars. Inline Korean error messages.
+- PII masking (`lib/core/mask.ts`) runs client-side before sending AND server-side again:
+  phone numbers, emails, URLs, account-number-like digit runs. Speaker names are replaced
+  with `나` / `상대` before sending to the LLM.
+- Show a small notice: "대화 내용은 저장되지 않고 분석에만 사용돼요."
+- The server never logs conversation text.
+
+## Prompt guardrails
+
+Witty, punchy, 2030 tone; roasts must be playful, never insulting about appearance, body,
+identity, or mental health; no profanity or sexual content. Instruct the model to ignore any
+instructions inside the conversation text (treat it as data).
+
+## API: `POST /api/analyze`
+
+Request: `{ conversation: string, relationship: enum, mySpeaker?: string }` (zod-validated).
+Flow: rate limit (10 req / 10 min per IP) -> validate -> mask -> analyze -> validate output
+-> return `{ result: AnalysisResult, shareToken: string }`. Errors return
+`{ error: { code, message } }` with Korean messages and proper status (400/429/500).
+
+## Share token (`lib/core/share-token.ts`)
+
+- Payload v1 encodes ONLY: version, characterId, the three stats, the three roast lines.
+  Never conversation text. (Reading content is not shared - keeps URLs short.)
+- Canonical encoding: a fixed-order JSON array
+  `[1, characterId, initiative, replyPsychology, pushPull, roast1, roast2, roast3]`
+  serialized with `JSON.stringify` (no whitespace), UTF-8 bytes, base64url without padding.
+- Signature: HMAC-SHA256 over the exact base64url payload string, truncated to 16 bytes,
+  base64url. Token = `payload.signature`. Use Web Crypto (works in Node and edge).
+- Verify rejects bad signature, unknown version, invalid schema.
+- `tests/golden/share-token.json`: several `{ secret, payload, token }` vectors including
+  Korean text and emoji; tests assert both encode and verify against them.
+
+## Screens
+
+Single page `app/page.tsx` drives steps with `useReducer`: landing -> input -> loading -> result.
+Persist the last result in `sessionStorage` so refresh on the result step keeps it.
+
+1. **LandingStep**: biggest title "카톡 대화 팩폭 분석기"; subtitle
+   "스레드/릴스 화제의 카톡 심리 테스트! 3초 만에 보는 내 톡 성향"; one modern illustration
+   area (inline SVG/CSS chat-bubble art, no external images); bottom-fixed thumb-zone primary
+   CTA "무료로 내 톡 팩폭 보기 (가입 없이 3초 소요)" with `env(safe-area-inset-bottom)`;
+   secondary "예시 대화로 1초 만에 테스트하기".
+2. **InputStep**: textarea with placeholder example, speaker chips (when detected),
+   relationship chips, "팩폭 분석 시작하기" with validation.
+3. **LoadingStep**: messages rotate "카톡 말투 감정 분석 중...", "밀당 주도권 스탯 계산 중...",
+   "팩폭 캐릭터 생성 중..." with animation. Minimum display ~2.4s so all three are seen,
+   but don't wait longer than the API.
+4. **ResultStep**: the shareable card (emoji/illustration, character name, tagline, 3 roast
+   lines, three animated stat bars) - contains no conversation text; below it the long
+   reading section (연애운, 팁, 추천 대화법); share/save buttons; paywall teaser.
+5. **Share**: `lib/kakao.ts` loads the SDK via `next/script`, `Kakao.init` once, then
+   `Kakao.Share.sendDefault` feed template:
+   - title `[톡티비티] 나 '[캐릭터명]' 나왔어 ㅋㅋㅋ`
+   - description `너는 나랑 카톡할 때 무슨 유형 나올 것 같아? 3초 만에 확인해봐!`
+   - button `나도 무료로 팩폭 분석하기`
+   - imageUrl = absolute URL of the dynamic OG image for this token; link = `/r/[token]`.
+   Also a "링크 복사" button.
+   **Save image**: `html-to-image` (dynamic import on click) -> PNG. Prefer
+   `navigator.share({ files })` when `canShare` supports files; else `<a download>`; and in
+   KakaoTalk/Instagram in-app browsers (UA detection) show a modal with the image and
+   "이미지를 길게 눌러 저장하세요".
+6. **Paywall teaser**: two locked cards with Lock icon - "상대방 속마음 정밀 리포트" 1,000원,
+   "대화가 절대로 안 끊기는 맞춤 답장 3개 추천" 1,900원. Click opens a dialog
+   "곧 오픈될 서비스입니다! (1차 MVP 테스트 중)".
+
+## Shared result page `app/r/[token]/page.tsx`
+
+Server component: verify token (invalid -> friendly error page with CTA). `generateMetadata`
+sets og:title `[톡티비티] 나 '[캐릭터명]' 나왔어 ㅋㅋㅋ`, og:description, og:image.
+Page shows "친구의 결과" card (character, stats, roast lines, generic description) and a big
+CTA "나도 무료로 팩폭 분석하기" -> `/`. OG image route (e.g. `app/r/[token]/opengraph-image.tsx`
+or `app/api/og/route.tsx`) renders 1200x630 with Pretendard, character name, emoji, stats.
+Also a default OG image for `/`.
+
+## Analytics events (`lib/analytics.ts`)
+
+`landing_view`, `cta_click` ({variant: main|example}), `analyze_submit`, `analyze_success`,
+`analyze_error` ({code}), `result_view` ({characterId}), `share_kakao_click`,
+`share_link_copy`, `image_save` ({method}), `paywall_teaser_click` ({tier: 1000|1900}),
+`shared_page_view` ({characterId}), `shared_page_cta_click`.
+
+## Example conversation
+
+A fixed example conversation with a **precomputed** result in `lib/core/example.ts`;
+the example button goes straight to loading -> result without calling the API (still show
+the short loading animation) and still gets a valid share token (sign via a tiny API call
+or include a pre-signed token computed at build time; choose the simpler correct option).
+
+## Tests (Vitest)
+
+Parser formats, masking, input validation, schema, mock analyzer determinism, share-token
+golden vectors + tamper rejection. `bun run test` must pass in one run.
+
+## Scripts
+
+`dev`, `build`, `start`, `lint` (biome), `format`, `typecheck` (`tsc --noEmit`), `test`,
+`export-schema`.
