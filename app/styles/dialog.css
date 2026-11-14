@@ -1,0 +1,15 @@
+.dialog-overlay { position: fixed; inset: 0; background: #20251b88; z-index: 30; }
+.dialog-content { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: var(--surface); color: var(--foreground); width: min(calc(100vw - 40px),420px); max-height: 85dvh; overflow: auto; border: 1px solid var(--line); border-radius: 22px; padding: 32px 24px; z-index: 31; box-shadow: 0 20px 80px #0002; }
+.dialog-content h2 { font-size: 21px; padding-right: 20px; line-height: 1.5; }
+.dialog-content p { font-size: 13px; margin-top: 12px; color: var(--muted); }
+.dialog-close { position: absolute; right: 5px; top: 5px; width: 44px; height: 44px; display: grid; place-items: center; background: none; border: 0; border-radius: 10px; }
+.save-preview { width: 100%; height: auto; border-radius: 16px; margin-top: 18px; }
+.shared-step .result-card { margin-top: 24px; }
+.shared-description { font-size: 14px; line-height: 1.9; text-align: center; margin: 25px 12px; color: var(--muted); }
+.center { justify-content: center; }
+.invalid-step { text-align: center; padding: 80px 24px; }
+.invalid-step > span { font-size: 68px; }
+.invalid-step h1 { font-size: 25px; margin: 25px 0 15px; }
+.invalid-step p { color: var(--muted); font-size: 14px; margin-bottom: 30px; }
+@media (prefers-reduced-motion: reduce) { .button { transition: none; } }
+@media (max-width: 360px) { .site-header { padding-inline: 20px; } .landing { padding-inline: 20px; } .result-card { padding-inline: 18px; } .result-card h2 { font-size: 26px; } .landing-bottom-note { gap: 6px; font-size: 9px; } }

@@ -24,7 +24,7 @@ http://localhost:3000 을 엽니다. `.env` 없이 모의 분석, 예시 대화,
 | --- | --- |
 | `LLM_PROVIDER` | `mock`(기본), `anthropic`, `openai` |
 | `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` | 선택한 공급자 키가 없으면 결정적 mock |
-| `LLM_MODEL` | 기본 `claude-haiku-4-5` / `gpt-5-mini`, 모델 변경 가능 |
+| `LLM_MODEL` | SDK 목록 기준 `claude-haiku-5-5` / `gpt-5.4-mini`, 변경 가능 |
 | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | 둘 다 없으면 인스턴스 메모리 제한, 운영 시 Redis 설정 |
 | `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST` | 둘 다 있어야 이벤트 수집, 자동 클릭/세션 녹화 비활성 |
 | `NEXT_PUBLIC_KAKAO_JS_KEY` | 없으면 Web Share, 미지원이면 링크 복사 |
