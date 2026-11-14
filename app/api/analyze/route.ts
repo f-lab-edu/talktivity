@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     const secret = shareSecret();
     const body: unknown = await request.json();
     const parsed = requestSchema.safeParse(body);
-    if (!parsed.success) return apiError("INVALID_INPUT", parsed.error.issues[0]?.message ?? "입력을 확인해 주세요.", 400);
+    if (!parsed.success) return apiError("INVALID_INPUT",         "대화와 관계를 확인해 주세요. 대화는 10~1,500자로 두 줄 이상 입력해 주세요.", 400);
     const speakers = speakersIn(parsed.data.conversation);
     if (speakers.length >= 2 && (!parsed.data.mySpeaker || !speakers.includes(parsed.data.mySpeaker))) {
       return apiError("SPEAKER_REQUIRED", "나는 누구인지 선택해 주세요.", 400);

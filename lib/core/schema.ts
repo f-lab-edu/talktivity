@@ -2,7 +2,8 @@ import { z } from "zod";
 import { characterIds } from "./characters";
 
 export const relationships = ["썸남/썸녀", "연인", "단짝 친구", "회사 동료"] as const;
-export const conversationSchema = z.string()
+export const conversationSchema = z
+  .string({ error: "대화를 입력해 주세요." })
   .min(10, "대화를 10자 이상 입력해 주세요.")
   .max(1500, "대화는 1,500자까지 입력할 수 있어요.")
   .regex(/\S[^\r\n]*\r?\n[\s\S]*\S/, "비어 있지 않은 대화를 두 줄 이상 입력해 주세요.");

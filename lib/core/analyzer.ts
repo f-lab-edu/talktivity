@@ -14,9 +14,9 @@ export type AnalyzerConfig = {
 
 export async function analyze(request: AnalysisRequest, config: AnalyzerConfig): Promise<AnalysisResult> {
   const model = config.provider === "anthropic" && config.anthropicKey
-          ? createAnthropic({ apiKey: config.anthropicKey })(config.model ?? "claude-haiku-5-5")
+          ? createAnthropic({ apiKey: config.anthropicKey })(config.model || "claude-haiku-5-5")
     : config.provider === "openai" && config.openaiKey
-              ? createOpenAI({ apiKey: config.openaiKey })(config.model ?? "gpt-5.4-mini") : null;
+              ? createOpenAI({ apiKey: config.openaiKey })(config.model || "gpt-5.4-mini") : null;
   if (!model) return mockAnalyze(request);
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
