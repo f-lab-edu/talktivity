@@ -9,7 +9,7 @@ import { shareSecret } from "@/lib/server/share-secret";
 
 export async function POST(request: Request) {
   try {
-    const limit = await rateLimit(clientIp(request));
+    const limit = await rateLimit(clientIp(request), "analyze");
     if (!limit.success)
       return apiError("RATE_LIMIT", "잠깐 쉬어 가요! 10분 뒤 다시 분석해 주세요.", 429, {
         "Retry-After": String(Math.max(1, Math.ceil((limit.reset - Date.now()) / 1000))),

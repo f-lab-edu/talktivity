@@ -111,7 +111,7 @@ instructions inside the conversation text (treat it as data).
 ## API: `POST /api/analyze`
 
 Request: `{ conversation: string, relationship: enum, mySpeaker?: string }` (zod-validated).
-Flow: rate limit (10 req / 10 min per IP) -> validate -> mask -> analyze -> validate output
+Flow: rate limit (analyze: 3 req / 10 min per IP; example: 10 req / 10 min, counted separately) -> validate -> mask -> analyze -> validate output
 -> return `{ result: AnalysisResult, shareToken: string }`. Errors return
 `{ error: { code, message } }` with Korean messages and proper status (400/429/500).
 

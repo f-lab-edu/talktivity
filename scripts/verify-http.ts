@@ -64,7 +64,7 @@ const malformed = await curl([
 assert.equal(malformed.status, 400);
 console.log("POST /api/analyze {}: 400; structured error=true");
 const statuses: number[] = [];
-for (let i = 0; i < 11; i++) {
+for (let i = 0; i < 4; i++) {
   const response = await curl([
     "-H",
     "Content-Type: application/json",
@@ -76,5 +76,5 @@ for (let i = 0; i < 11; i++) {
   ]);
   statuses.push(response.status);
 }
-assert.deepEqual(statuses, [...Array<number>(10).fill(200), 429]);
-console.log(`11 rapid POST /api/analyze: ${statuses.join(", ")}`);
+assert.deepEqual(statuses, [...Array<number>(3).fill(200), 429]);
+console.log(`4 rapid POST /api/analyze: ${statuses.join(", ")}`);
