@@ -4,7 +4,7 @@ import { speakersIn } from "@/lib/core/parse-kakao";
 import { requestSchema, resultSchema } from "@/lib/core/schema";
 import { signToken, toSharePayload } from "@/lib/core/share-token";
 import { apiError, clientIp } from "@/lib/server/http";
-import { rateLimit } from "@/lib/server/rate-limit";
+import { globalLlmLimit, rateLimit } from "@/lib/server/rate-limit";
 import { shareSecret } from "@/lib/server/share-secret";
 
 export async function POST(request: Request) {
@@ -30,6 +30,11 @@ export async function POST(request: Request) {
     ) {
       return apiError("SPEAKER_REQUIRED", "나는 누구인지 선택해 주세요.", 400);
     }
+    const busy = await globalLlmLimit();
+    if (!busy.success)
+      return apiError("BUSY", "지금 사람이 많아요! 1분 뒤 다시 시도해 주세요.", 503, {
+        "Retry-After": String(Math.max(1, Math.ceil((busy.reset - Date.now()) / 1000))),
+      });
     const masked = {
       conversation: prepareConversation(
         parsed.data.conversation,
