@@ -2,7 +2,7 @@
 .result-heading p { margin-top: 10px; font-size: 13px; color: var(--muted); }
 .badge { display: inline-flex; border-radius: 100px; background: #eaf0dd; color: #495e27; padding: 4px 10px; font-size: 11px; font-weight: 700; }
 .result-card { padding: 25px 24px 20px; border-radius: 28px; color: #242822; }
-.card-top { display: flex; justify-content: space-between; font-size: 10px; font-weight: 700; letter-spacing: 1px; }
+.card-top { display: flex; justify-content: space-between;   font-size: 11px; font-weight: 700; letter-spacing: 1px; }
 .character-emoji { text-align: center; font-size: 88px; line-height: 1.6;   padding-top: 10px;
   display: flex;
   justify-content: center;
@@ -16,7 +16,7 @@
 .stat > div:first-child { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
 .stat-track { height: 7px; border-radius: 10px; background: #ffffff80; overflow: hidden; }
 .stat-track > div { height: 100%; border-radius: 10px; background: #384432; }
-.card-brand { text-align: center; margin-top: 26px; font-size: 9px; letter-spacing: .1em; color: #515547; }
+.card-brand { text-align: center; margin-top: 26px;   font-size: 11px; letter-spacing: .1em;   color: #384432; }
 .reading-section { margin: 36px 2px; }
 .reading-section h2 { font-size: 23px; letter-spacing: -.8px; margin: 8px 0 25px; }
 .reading-section h3 { font-size: 14px; margin: 24px 0 10px; }

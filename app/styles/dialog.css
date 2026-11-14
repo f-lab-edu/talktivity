@@ -12,4 +12,6 @@
 .invalid-step h1 { font-size: 25px; margin: 25px 0 15px; }
 .invalid-step p { color: var(--muted); font-size: 14px; margin-bottom: 30px; }
 @media (prefers-reduced-motion: reduce) { .button { transition: none; } }
-@media (max-width: 360px) { .site-header { padding-inline: 20px; } .landing { padding-inline: 20px; } .result-card { padding-inline: 18px; } .result-card h2 { font-size: 26px; } .landing-bottom-note { gap: 6px; font-size: 9px; } }
+@media (max-width: 360px) { .site-header { padding-inline: 20px; } .landing { padding-inline: 20px; } .result-card { padding-inline: 18px; } .result-card h2 { font-size: 26px; }   .landing-bottom-note {
+    gap: 6px;
+    font-size: 11px; } }

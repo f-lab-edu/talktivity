@@ -11,9 +11,11 @@
 .bubble-in { border: 1px solid var(--line); background: white; border-radius: 21px 21px 21px 4px; width: fit-content; margin-top: 18px; transform: rotate(-4deg); }
 .bubble-out { background: var(--accent); border-radius: 21px 21px 4px 21px; margin: 16px 0 0 auto; transform: rotate(3deg); }
 .character-orbit { width: 142px; height: 142px; background: #e9eddf; border-radius: 50%; margin: 27px 0 0 27px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px; color: #48593a; transform: rotate(-8deg); }
-.character-orbit span { font-size: 10px; font-weight: 700; }
+.character-orbit span {
+  font-size: 11px; font-weight: 700; }
 .art-sticker { position: absolute; right: 19px; bottom: 12px; font-size: 14px; transform: rotate(8deg); line-height: 1.45; }
 .art-sticker strong { font-size: 20px; }
-.landing-bottom-note { display: flex; align-items: center; justify-content: center; gap: 9px; font-size: 10px; color: var(--muted); margin-top: 22px; }
+.landing-bottom-note { display: flex; align-items: center; justify-content: center; gap: 9px;   font-size: 11px; color: var(--muted);   margin-top: 22px;
+  flex-wrap: wrap; }
 .landing-bottom-note i { width: 2px; height: 2px; border-radius: 50%; background: #929988; }
 .landing-actions { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: min(100%,480px); padding: 16px 24px calc(12px + env(safe-area-inset-bottom)); background: linear-gradient(#f8f7f200, var(--background) 12%); z-index: 10; display: grid; gap: 6px; }
