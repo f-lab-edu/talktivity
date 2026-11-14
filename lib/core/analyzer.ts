@@ -21,20 +21,23 @@ export type AnalyzerConfig = {
   readonly model?: string | undefined;
 };
 
+export function createModel(config: AnalyzerConfig) {
+  return config.provider === "anthropic" && config.anthropicKey
+    ? createAnthropic({ apiKey: config.anthropicKey })(config.model || "claude-haiku-5-5")
+    : config.provider === "openai" && config.openaiKey
+      ? createOpenAI({ apiKey: config.openaiKey })(config.model || "gpt-5.4-mini")
+      : config.provider === "google" && config.googleKey
+        ? createGoogleGenerativeAI({ apiKey: config.googleKey })(
+            config.model || "gemini-3.5-flash-lite",
+          )
+        : null;
+}
+
 export async function analyze(
   request: AnalysisRequest,
   config: AnalyzerConfig,
 ): Promise<AnalysisResult> {
-  const model =
-    config.provider === "anthropic" && config.anthropicKey
-      ? createAnthropic({ apiKey: config.anthropicKey })(config.model || "claude-haiku-5-5")
-      : config.provider === "openai" && config.openaiKey
-        ? createOpenAI({ apiKey: config.openaiKey })(config.model || "gpt-5.4-mini")
-        : config.provider === "google" && config.googleKey
-          ? createGoogleGenerativeAI({ apiKey: config.googleKey })(
-              config.model || "gemini-3.5-flash-lite",
-            )
-          : null;
+  const model = createModel(config);
   if (!model) return mockAnalyze(request);
   for (let attempt = 0; attempt < 2; attempt++) {
     try {

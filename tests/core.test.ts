@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { analyze } from "../lib/core/analyzer";
 import { exampleResult } from "../lib/core/example";
+import { extractConversation, latestConversationWithinLimit } from "../lib/core/extractor";
 import { maskPII, prepareConversation } from "../lib/core/mask";
 import { mockAnalyze } from "../lib/core/mock-analyzer";
 import { parseKakao, speakersIn } from "../lib/core/parse-kakao";
@@ -120,4 +121,23 @@ describe("분석기", () => {
       expect(await analyze(request, config)).toEqual(mockAnalyze(request));
     },
   );
+});
+
+describe("캡처 추출", () => {
+  it("최근 메시지부터 1,500자 안에 들어가는 만큼만 남기고 개인정보를 가린다", () => {
+    const old = { speaker: "상대", text: "가".repeat(1000) };
+    const recent = [
+      { speaker: "나", text: "번호 010-1234-5678 로\n연락해" },
+      { speaker: "상대", text: "나".repeat(700) },
+    ];
+    const conversation = latestConversationWithinLimit([old, ...recent]);
+    expect(conversation).toBe(`나: 번호 [전화번호] 로 연락해\n상대: ${"나".repeat(700)}`);
+    expect(
+      requestSchema.safeParse({ conversation, relationship: "연인", mySpeaker: "나" }).success,
+    ).toBe(true);
+  });
+  it("키가 없으면 외부 요청 없이 나/상대 예시 대화를 돌려준다", async () => {
+    const outcome = await extractConversation([], { provider: "mock" });
+    expect(outcome.ok && speakersIn(outcome.conversation)).toEqual(["나", "상대"]);
+  });
 });
