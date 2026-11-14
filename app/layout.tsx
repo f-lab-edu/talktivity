@@ -22,9 +22,16 @@ export const metadata: Metadata = {
     images: [{ url: "/api/og", width: 1200, height: 630 }],
   },
 };
+// KakaoTalk's in-app browser closes when the user goes back to a chat to take screenshots,
+// so hand the page to the system browser and close the in-app view.
+const openOutsideKakao = `(function(){var ua=navigator.userAgent;if(!/KAKAOTALK/.test(ua))return;location.href='kakaotalk://web/openExternal?url='+encodeURIComponent(location.href);setTimeout(function(){location.href=/iPhone|iPad|iPod/.test(ua)?'kakaoweb://closeBrowser':'kakaotalk://inappbrowser/close'},1000)})()`;
 export default function RootLayout({ children }: { readonly children: ReactNode }) {
   return (
     <html lang="ko">
+      <head>
+        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: static redirect script, no user input */}
+        <script dangerouslySetInnerHTML={{ __html: openOutsideKakao }} />
+      </head>
       <body className={pretendard.variable}>
         <Providers>
           <div className="app-shell max-w-[480px] mx-auto">
