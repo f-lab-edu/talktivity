@@ -50,12 +50,14 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof SyntaxError)
       return apiError("INVALID_JSON", "올바른 요청 형식이 아니에요.", 400);
-    if (error instanceof Error)
+    if (error instanceof Error) {
+      console.error(`/api/analyze failed: ${error.name}: ${error.message}`);
       return apiError(
         "ANALYZE_FAILED",
         "분석을 완료하지 못했어요. 잠시 후 다시 시도해 주세요.",
         500,
       );
+    }
     throw error;
   }
 }

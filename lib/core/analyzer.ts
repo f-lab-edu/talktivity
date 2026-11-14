@@ -44,7 +44,10 @@ export async function analyze(
     } catch (error) {
       if (!(error instanceof Error)) throw error;
       // Provider/network/schema failures retry once, then deterministic fallback.
+      // Log only error metadata, never the conversation.
+      console.warn(`LLM analyze attempt ${attempt + 1} failed: ${error.name}: ${error.message}`);
     }
   }
+  console.error("LLM analyze failed twice; returning mock result.");
   return mockAnalyze(request);
 }
