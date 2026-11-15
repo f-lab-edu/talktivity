@@ -1,3 +1,67 @@
+.axis-explanation {
+  margin: 32px 2px 0;
+}
+.axis-explanation h2 {
+  font-size: 23px;
+  letter-spacing: -0.8px;
+}
+.analysis-meta {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.confidence-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--accent) 30%, var(--surface));
+  font-size: 13px;
+  line-height: 1.7;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.confidence-notice svg {
+  flex-shrink: 0;
+  margin-top: calc((1lh - 16px) / 2);
+}
+.axis-reasons {
+  display: grid;
+  gap: 16px;
+  margin: 24px 0 0;
+}
+.axis-reasons > div {
+  display: grid;
+  gap: 4px;
+}
+.axis-reasons dt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-pretendard), Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+}
+.reason-letter {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 45%, var(--surface));
+  font-size: 12px;
+}
+.axis-reasons dd {
+  margin: 0 0 0 32px;
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--muted);
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
 .share-actions {
   display: grid;
   gap: 10px;

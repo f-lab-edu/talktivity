@@ -1,18 +1,25 @@
 "use client";
 
-import { Copy, Download, LockKeyhole, MessageCircle, RotateCcw } from "lucide-react";
+import { Copy, Download, Info, LockKeyhole, MessageCircle, RotateCcw } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
-import { ResultCard } from "@/components/result-card";
+import { useEffect, useId, useRef, useState } from "react";
+import { activePole, poleLabels, ResultCard } from "@/components/result-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { track } from "@/lib/analytics";
-import { characters } from "@/lib/core/characters";
+import { getCharacter } from "@/lib/core/characters";
+import { axisIds, type Confidence } from "@/lib/core/classification";
 import type { AnalysisResponse } from "@/lib/core/schema";
-import { toSharePayload } from "@/lib/core/share-token";
+import { sharePayloadFromResult } from "@/lib/core/share-token";
 import { shareKakao } from "@/lib/kakao";
 import { imageUrl, resultUrl } from "@/lib/site";
+
+const confidenceLabels: Readonly<Record<Confidence, string>> = {
+  low: "낮음",
+  medium: "보통",
+  high: "높음",
+};
 
 export function ResultStep({
   data,
@@ -26,7 +33,8 @@ export function ResultStep({
   const [busy, setBusy] = useState(false);
   const [teaser, setTeaser] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
-  const character = characters[data.result.characterId];
+  const explanationId = useId();
+  const character = getCharacter(data.result.typeCode);
   const url = resultUrl(data.shareToken);
   useEffect(() => {
     track("result_view", { characterId: data.result.characterId });
@@ -104,8 +112,34 @@ export function ResultStep({
         <p>숨길 수 없는 나의 톡 본캐</p>
       </div>
       <div ref={card}>
-        <ResultCard payload={toSharePayload(data.result)} />
+        <ResultCard payload={sharePayloadFromResult(data.result)} />
       </div>
+      <section className="axis-explanation" aria-labelledby={explanationId}>
+        <h2 id={explanationId}>이렇게 분석했어요</h2>
+        <p className="analysis-meta">
+          신뢰도 {confidenceLabels[data.result.confidence]} · 분석한 대화 턴{" "}
+          {data.result.sampleSize}개
+        </p>
+        {data.result.confidence === "low" && (
+          <p className="confidence-notice">
+            <Info size={16} aria-hidden="true" />
+            분석 신뢰도가 낮아요. 대화를 조금 더 추가하면 더 정확해져요.
+          </p>
+        )}
+        <dl className="axis-reasons">
+          {axisIds.map((axisId) => {
+            const pole = activePole(data.result.typeCode, axisId);
+            return (
+              <div key={axisId}>
+                <dt>
+                  <span className="reason-letter">{pole}</span> {poleLabels[pole]}
+                </dt>
+                <dd>{data.result.axisReasons[axisId]}</dd>
+              </div>
+            );
+          })}
+        </dl>
+      </section>
       <section className="reading-section">
         <p className="eyebrow">한 겹 더 들여다보면</p>
         <h2>우리 대화의 다음 장</h2>
