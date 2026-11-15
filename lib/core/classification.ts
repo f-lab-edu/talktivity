@@ -51,6 +51,9 @@ export type DeterministicFeatures = {
   readonly hints: HintCounts;
   readonly evidence: AxisScores;
   readonly rawScores: AxisScores;
+  // Unclamped measurements behind the L/B and C/M raw scores (0 when there are no turns).
+  readonly medianLength: number;
+  readonly expressionsPerTurn: number;
 };
 export type ClassificationResult = {
   readonly typeCode: TypeCode;
@@ -104,8 +107,7 @@ export function selectAnalyzedTurns(turns: readonly Message[]): readonly Message
   return selected.filter((turn) => turn.text.trim());
 }
 
-export function lengthRawScore(turns: readonly Message[]): number {
-  if (turns.length === 0) return 50;
+export function medianLength(turns: readonly Message[]): number {
   const lengths = turns
     .map(
       (turn) =>
@@ -115,16 +117,23 @@ export function lengthRawScore(turns: readonly Message[]): number {
     .sort((a, b) => a - b);
   const middle = Math.floor(lengths.length / 2);
   const upper = lengths[middle] ?? 0;
-  const median = lengths.length % 2 ? upper : ((lengths[middle - 1] ?? 0) + upper) / 2;
-  return Math.min(100, Math.round(median * 2));
+  return lengths.length % 2 ? upper : ((lengths[middle - 1] ?? 0) + upper) / 2;
 }
 
-export function colorRawScore(turns: readonly Message[]): number {
+export function lengthRawScore(turns: readonly Message[]): number {
+  return turns.length ? Math.min(100, Math.round(medianLength(turns) * 2)) : 50;
+}
+
+export function expressionsPerTurn(turns: readonly Message[]): number {
   const count = turns.reduce(
     (total, turn) => total + [...turn.text.normalize("NFC").matchAll(expressionPattern)].length,
     0,
   );
-  return turns.length ? Math.min(100, Math.round((count / turns.length) * 50)) : 50;
+  return turns.length ? count / turns.length : 0;
+}
+
+export function colorRawScore(turns: readonly Message[]): number {
+  return turns.length ? Math.min(100, Math.round(expressionsPerTurn(turns) * 50)) : 50;
 }
 
 export function countHints(turns: readonly Message[]): HintCounts {
@@ -172,6 +181,8 @@ export function deterministicFeatures(turns: readonly Message[]): DeterministicF
       length: lengthRawScore(turns),
       color: colorRawScore(turns),
     } satisfies AxisScores,
+    medianLength: medianLength(turns),
+    expressionsPerTurn: expressionsPerTurn(turns),
   };
 }
 

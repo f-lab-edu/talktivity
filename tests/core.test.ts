@@ -89,13 +89,14 @@ describe("입력 및 결과 계약", () => {
     ).toBe(false);
   });
   it.each([
-    { ...exampleResult, characterId: "unknown" },
+    { ...exampleResult, characterId: "flirt" },
     { ...exampleResult, roastLines: ["a", "b"] },
     { ...exampleResult, roastLines: ["a".repeat(61), "b", "c"] },
-    { ...exampleResult, stats: { initiative: 101, replyPsychology: 1, pushPull: 2 } },
-    { ...exampleResult, stats: { initiative: 0.5, replyPsychology: 1, pushPull: 2 } },
+    { ...exampleResult, axes: { ...exampleResult.axes, length: 101 } },
+    { ...exampleResult, axes: { ...exampleResult.axes, length: 0.5 } },
     { ...exampleResult, reading: { ...exampleResult.reading, tips: ["하나"] } },
   ])("잘못된 분석 결과를 거절한다", (result) => {
+    expect(resultSchema.safeParse(exampleResult).success).toBe(true);
     expect(resultSchema.safeParse(result).success).toBe(false);
   });
 });
@@ -105,15 +106,27 @@ describe("분석기", () => {
     conversation: "나: 오늘 뭐 해?\n상대: 나 오늘 쉬어",
     relationship: "연인",
   } as const;
-  it("같은 입력은 유효하고 동일한 모의 결과를 만든다", () => {
+  it("같은 입력은 유효하고 바이트까지 동일한 모의 결과를 만든다", () => {
     const result = mockAnalyze(request);
     expect(resultSchema.safeParse(result).success).toBe(true);
-    expect(mockAnalyze({ ...request })).toEqual(result);
+    expect(JSON.stringify(mockAnalyze({ ...request }))).toBe(JSON.stringify(result));
+    expect(result.badges).not.toContain("comedian");
   });
-  it("다른 입력은 모의 스탯에 반영한다", () => {
-    expect(
-      mockAnalyze({ ...request, conversation: "오늘은 또 다른 대화\n반가워 정말!" }).stats,
-    ).not.toEqual(mockAnalyze(request).stats);
+  it.each([
+    [
+      "나: 응\n상대: 뭐 해\n나: 네",
+      "나: 오늘 점심은 회사 근처 새로 생긴 국수집에서 먹었어\n상대: 오\n나: 저녁은 집에서 천천히 만들어 먹을 생각이야",
+      1,
+    ],
+    [
+      "나: 응 알았어\n상대: 뭐 해\n나: 그래 좋아",
+      "나: 응 알았어 ㅋㅋㅋ 😊\n상대: 뭐 해\n나: 그래 좋아!! 😊",
+      2,
+    ],
+  ] as const)("길이·표현이 다른 입력은 L/B 또는 C/M에 반영한다", (plain, varied, index) => {
+    const base = mockAnalyze({ ...request, conversation: plain }).typeCode;
+    const changed = mockAnalyze({ ...request, conversation: varied }).typeCode;
+    expect(changed[index]).not.toBe(base[index]);
   });
   it.each([{ provider: "mock" }, { provider: "anthropic" }, { provider: "openai" }, {}])(
     "키가 없으면 외부 요청 없이 모의 분석을 한다",

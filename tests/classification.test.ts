@@ -87,6 +87,17 @@ describe("결정적 피처", () => {
     expect(result.evidence).toEqual({ direction: 3, length: 1, color: 1, stance: 4 });
     expect(result.rawScores).toMatchObject({ direction: 67, stance: 25 });
   });
+  it("clamp 전 중앙 글자 수와 턴당 표현 수를 함께 낸다", () => {
+    const result = deterministicFeatures(
+      turns(...Array(3).fill(`${"가".repeat(120)} ${"😊".repeat(6)}`)),
+    );
+    expect(result).toMatchObject({
+      medianLength: 120,
+      expressionsPerTurn: 6,
+      rawScores: { length: 100, color: 100 },
+    });
+    expect(deterministicFeatures([])).toMatchObject({ medianLength: 0, expressionsPerTurn: 0 });
+  });
   it("신호가 없으면 의미 축 raw를 50으로 둔다", () => {
     expect(deterministicFeatures(turns("책상")).rawScores).toMatchObject({
       direction: 50,
