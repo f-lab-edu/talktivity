@@ -1,5 +1,5 @@
 import { exampleResult } from "@/lib/core/example";
-import { signToken, toSharePayload } from "@/lib/core/share-token";
+import { sharePayloadFromResult, signToken } from "@/lib/core/share-token";
 import { apiError, clientIp } from "@/lib/server/http";
 import { rateLimit } from "@/lib/server/rate-limit";
 import { shareSecret } from "@/lib/server/share-secret";
@@ -11,7 +11,7 @@ export async function POST(request: Request) {
   return Response.json(
     {
       result: exampleResult,
-      shareToken: await signToken(toSharePayload(exampleResult), shareSecret()),
+      shareToken: await signToken(sharePayloadFromResult(exampleResult), shareSecret()),
     },
     { headers: { "Cache-Control": "no-store" } },
   );

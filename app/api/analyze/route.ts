@@ -2,7 +2,7 @@ import { analyze } from "@/lib/core/analyzer";
 import { prepareConversation } from "@/lib/core/mask";
 import { speakersIn } from "@/lib/core/parse-kakao";
 import { requestSchema, resultSchema } from "@/lib/core/schema";
-import { signToken, toSharePayload } from "@/lib/core/share-token";
+import { sharePayloadFromResult, signToken } from "@/lib/core/share-token";
 import { apiError, clientIp } from "@/lib/server/http";
 import { globalLlmLimit, rateLimit } from "@/lib/server/rate-limit";
 import { shareSecret } from "@/lib/server/share-secret";
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
         model: process.env.LLM_MODEL,
       }),
     );
-    const shareToken = await signToken(toSharePayload(result), secret);
+    const shareToken = await signToken(sharePayloadFromResult(result), secret);
     return Response.json({ result, shareToken }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     if (error instanceof SyntaxError)
