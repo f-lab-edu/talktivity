@@ -1,3 +1,46 @@
+Twemoji character artwork used by talktivity
+=======================================================================
+
+Every SVG file in this directory is Twemoji artwork from
+https://github.com/jdecked/twemoji (assets/svg/<codepoint>.svg).
+
+    Copyright (c) 2014-2021 Twitter
+    Copyright (c) 2022-present Jason Sofonia & Justine De Caires
+    Graphics licensed under CC BY 4.0:
+    https://creativecommons.org/licenses/by/4.0/
+
+Modifications: the vector paths are unchanged. Each file adds two
+attributes to the root <svg> element - role="img" and a Korean
+aria-label naming the character - and ends with a trailing newline.
+The artwork is provided as-is, without warranty (see Section 5 below).
+When a character SVG is added, extend this list.
+
+File              Twemoji source        Emoji
+----------------  --------------------  -----------------------------
+answer.svg        1f989.svg             U+1F989 owl
+briefing.svg      1f985.svg             U+1F985 eagle
+chat.svg          1f4ac.svg             U+1F4AC speech balloon
+cheerleader.svg   1f430.svg             U+1F430 rabbit face
+checkin.svg       1f98c.svg             U+1F98C deer
+comedian.svg      1f9a6.svg             U+1F9A6 otter
+cool.svg          1f408-200d-2b1b.svg   U+1F408 U+200D U+2B1B black cat
+detective.svg     1f575.svg             U+1F575 detective
+dispatch.svg      1f98f.svg             U+1F98F rhinoceros
+emoji.svg         1f43c.svg             U+1F43C panda
+escort.svg        1f427.svg             U+1F427 penguin
+flirt.svg         1f98a.svg             U+1F98A fox
+guardian.svg      1f415.svg             U+1F415 dog
+minimalist.svg    1f9a5.svg             U+1F9A5 sloth
+nightowl.svg      1f319.svg             U+1F319 crescent moon
+novelist.svg      1f433.svg             U+1F433 spouting whale
+planner.svg       1f9ab.svg             U+1F9AB beaver
+spark.svg         1f43f.svg             U+1F43F chipmunk
+sunshine.svg      1f425.svg             U+1F425 front-facing baby chick
+
+The full text of the license follows.
+
+=======================================================================
+
 Attribution 4.0 International
 
 =======================================================================

@@ -61,4 +61,6 @@ http://localhost:3000 을 엽니다. `.env` 없이 모의 분석, 예시 대화,
 이미지 모달을 제공합니다. 로그인, DB, 실제 결제는 없습니다.
 Pretendard Bold OTF와 SIL OFL 라이선스는 `assets/`에 포함되어 외부 폰트 요청이 없습니다.
 캐릭터 SVG는 Twemoji (CC BY 4.0, jdecked/twemoji)이며 `public/characters/`에
-라이선스와 함께 포함했습니다. 이모지 글꼴이 없는 기기에서도 동일하게 표시합니다.
+라이선스와 함께 포함했습니다. 파일별 원본 이모지와 수정 내용(`role`, `aria-label` 추가)은
+`public/characters/LICENSE` 머리말에 적었고, 캐릭터 SVG를 추가하면 그 목록도 함께 갱신합니다.
+이모지 글꼴이 없는 기기에서도 동일하게 표시합니다.
