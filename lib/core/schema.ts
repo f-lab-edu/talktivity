@@ -1,5 +1,12 @@
 import { z } from "zod";
-import { characterIds } from "./characters";
+import {
+  axisIds,
+  axisPoles,
+  badgeIds,
+  type Confidence,
+  canonicalBadges,
+  typeCodes,
+} from "./classification";
 
 export const relationships = ["썸남/썸녀", "연인", "단짝 친구", "회사 동료"] as const;
 export const conversationSchema = z
@@ -15,28 +22,69 @@ export const requestSchema = z
   })
   .strict();
 const text = z.string().min(1);
+export const axisScoreSchema = z.number().int().min(0).max(100);
+export const axisReasonSchema = text.max(80);
 export const roastSchema = z.tuple([text.max(60), text.max(60), text.max(60)]);
-export const statsSchema = z
+export const readingSchema = z
   .object({
-    initiative: z.number().int().min(0).max(100),
-    replyPsychology: z.number().int().min(0).max(100),
-    pushPull: z.number().int().min(0).max(100),
+    loveFortune: text,
+    tips: z.array(text).length(3),
+    recommendedLines: z.array(text).min(2).max(3),
   })
   .strict();
+export const typeCodeSchema = z.enum(typeCodes);
+export const axisScoresSchema = z
+  .object({
+    direction: axisScoreSchema,
+    length: axisScoreSchema,
+    color: axisScoreSchema,
+    stance: axisScoreSchema,
+  })
+  .strict();
+export const axisReasonsSchema = z
+  .object({
+    direction: axisReasonSchema,
+    length: axisReasonSchema,
+    color: axisReasonSchema,
+    stance: axisReasonSchema,
+  })
+  .strict();
+export const confidenceSchema = z.enum(["low", "medium", "high"] satisfies Confidence[]);
+// canonicalBadges dedupes and orders, so equality rejects duplicates and reversed order.
+export const badgeIdsSchema = z
+  .array(z.enum(badgeIds))
+  .max(badgeIds.length)
+  .refine(
+    (badges) => canonicalBadges(badges).join() === badges.join(),
+    "배지는 중복 없이 comedian, emoji 순서여야 해요.",
+  );
 export const resultSchema = z
   .object({
-    characterId: z.enum(characterIds),
+    typeCode: typeCodeSchema,
+    axes: axisScoresSchema,
+    axisReasons: axisReasonsSchema,
+    confidence: confidenceSchema,
+    sampleSize: z.number().int().min(0),
+    badges: badgeIdsSchema,
     roastLines: roastSchema,
-    stats: statsSchema,
-    reading: z
-      .object({
-        loveFortune: text,
-        tips: z.array(text).length(3),
-        recommendedLines: z.array(text).min(2).max(3),
-      })
-      .strict(),
+    reading: readingSchema,
   })
-  .strict();
+  .strict()
+  .superRefine((result, context) => {
+    // Finalizer invariant: a display score off 50 must agree with its type letter.
+    axisIds.forEach((axisId, index) => {
+      const score = result.axes[axisId];
+      const [first, second] = axisPoles[axisId];
+      const expected = score > 50 ? first : score < 50 ? second : null;
+      if (expected && result.typeCode[index] !== expected) {
+        context.addIssue({
+          code: "custom",
+          path: ["typeCode"],
+          message: `${axisId} 점수 ${score}는 ${expected} 글자와 맞아야 해요.`,
+        });
+      }
+    });
+  });
 export const responseSchema = z.object({ result: resultSchema, shareToken: text });
 export const errorSchema = z.object({ error: z.object({ code: text, message: text }) });
 export type AnalysisRequest = z.infer<typeof requestSchema>;
