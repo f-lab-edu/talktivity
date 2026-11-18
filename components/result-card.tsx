@@ -2,34 +2,10 @@
 
 import { motion } from "motion/react";
 import Image from "next/image";
+import { activePole, poleLabels } from "@/lib/core/axis-display";
 import { getBadge, getCharacter } from "@/lib/core/characters";
-import {
-  type AxisId,
-  axisIds,
-  axisPoles,
-  isBoundary,
-  type TypeCode,
-} from "@/lib/core/classification";
+import { axisIds, axisPoles, isBoundary } from "@/lib/core/classification";
 import type { SharePayloadV2 } from "@/lib/core/share-token";
-
-type Pole = (typeof axisPoles)[AxisId][number];
-
-export const poleLabels: Readonly<Record<Pole, string>> = {
-  O: "주도",
-  R: "반응",
-  L: "장문",
-  B: "단문",
-  C: "컬러",
-  M: "모노",
-  D: "직진",
-  G: "조율",
-};
-
-// The type letter picks the active pole, so a score of exactly 50 follows the code.
-export function activePole(typeCode: TypeCode, axisId: AxisId): Pole {
-  const [first, second] = axisPoles[axisId];
-  return typeCode[axisIds.indexOf(axisId)] === second ? second : first;
-}
 
 export function ResultCard({
   payload,
