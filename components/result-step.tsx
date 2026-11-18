@@ -3,11 +3,12 @@
 import { Copy, Download, Info, LockKeyhole, MessageCircle, RotateCcw } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useId, useRef, useState } from "react";
-import { activePole, poleLabels, ResultCard } from "@/components/result-card";
+import { ResultCard } from "@/components/result-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import { track } from "@/lib/analytics";
+import { track, typeAnalyticsProps } from "@/lib/analytics";
+import { activePole, poleLabels } from "@/lib/core/axis-display";
 import { getCharacter } from "@/lib/core/characters";
 import { axisIds, type Confidence } from "@/lib/core/classification";
 import type { AnalysisResponse } from "@/lib/core/schema";
@@ -37,8 +38,15 @@ export function ResultStep({
   const character = getCharacter(data.result.typeCode);
   const url = resultUrl(data.shareToken);
   useEffect(() => {
-    track("result_view", { characterId: data.result.characterId });
-  }, [data.result.characterId]);
+    track(
+      "result_view",
+      typeAnalyticsProps({
+        typeCode: data.result.typeCode,
+        axes: data.result.axes,
+        badges: data.result.badges,
+      }),
+    );
+  }, [data.result.axes, data.result.badges, data.result.typeCode]);
   async function copy() {
     try {
       await navigator.clipboard.writeText(url);
