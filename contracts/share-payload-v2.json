@@ -2,52 +2,69 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
-    "version": {
-      "type": "number",
-      "const": 1
-    },
-    "characterId": {
+    "typeCode": {
       "type": "string",
       "enum": [
-        "flirt",
-        "cool",
-        "answer",
-        "guardian",
-        "sunshine",
-        "detective",
-        "emoji",
-        "novelist",
-        "minimalist",
-        "comedian",
-        "planner",
-        "nightowl"
+        "OLCD",
+        "OLCG",
+        "OLMD",
+        "OLMG",
+        "OBCD",
+        "OBCG",
+        "OBMD",
+        "OBMG",
+        "RLCD",
+        "RLCG",
+        "RLMD",
+        "RLMG",
+        "RBCD",
+        "RBCG",
+        "RBMD",
+        "RBMG"
       ]
     },
-    "stats": {
+    "axes": {
       "type": "object",
       "properties": {
-        "initiative": {
+        "direction": {
           "type": "integer",
           "minimum": 0,
           "maximum": 100
         },
-        "replyPsychology": {
+        "length": {
           "type": "integer",
           "minimum": 0,
           "maximum": 100
         },
-        "pushPull": {
+        "color": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "stance": {
           "type": "integer",
           "minimum": 0,
           "maximum": 100
         }
       },
       "required": [
-        "initiative",
-        "replyPsychology",
-        "pushPull"
+        "direction",
+        "length",
+        "color",
+        "stance"
       ],
       "additionalProperties": false
+    },
+    "badges": {
+      "maxItems": 2,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "comedian",
+          "emoji"
+        ]
+      }
     },
     "roastLines": {
       "type": "array",
@@ -74,9 +91,9 @@
     }
   },
   "required": [
-    "version",
-    "characterId",
-    "stats",
+    "typeCode",
+    "axes",
+    "badges",
     "roastLines"
   ],
   "additionalProperties": false

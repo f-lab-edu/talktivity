@@ -5,22 +5,114 @@
     "result": {
       "type": "object",
       "properties": {
-        "characterId": {
+        "typeCode": {
           "type": "string",
           "enum": [
-            "flirt",
-            "cool",
-            "answer",
-            "guardian",
-            "sunshine",
-            "detective",
-            "emoji",
-            "novelist",
-            "minimalist",
-            "comedian",
-            "planner",
-            "nightowl"
+            "OLCD",
+            "OLCG",
+            "OLMD",
+            "OLMG",
+            "OBCD",
+            "OBCG",
+            "OBMD",
+            "OBMG",
+            "RLCD",
+            "RLCG",
+            "RLMD",
+            "RLMG",
+            "RBCD",
+            "RBCG",
+            "RBMD",
+            "RBMG"
           ]
+        },
+        "axes": {
+          "type": "object",
+          "properties": {
+            "direction": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "length": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "color": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "stance": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            }
+          },
+          "required": [
+            "direction",
+            "length",
+            "color",
+            "stance"
+          ],
+          "additionalProperties": false
+        },
+        "axisReasons": {
+          "type": "object",
+          "properties": {
+            "direction": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            "length": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            "color": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            "stance": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            }
+          },
+          "required": [
+            "direction",
+            "length",
+            "color",
+            "stance"
+          ],
+          "additionalProperties": false
+        },
+        "confidence": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "sampleSize": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "badges": {
+          "maxItems": 2,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "comedian",
+              "emoji"
+            ]
+          }
         },
         "roastLines": {
           "type": "array",
@@ -44,32 +136,6 @@
           "items": false,
           "minItems": 3,
           "maxItems": 3
-        },
-        "stats": {
-          "type": "object",
-          "properties": {
-            "initiative": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 100
-            },
-            "replyPsychology": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 100
-            },
-            "pushPull": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 100
-            }
-          },
-          "required": [
-            "initiative",
-            "replyPsychology",
-            "pushPull"
-          ],
-          "additionalProperties": false
         },
         "reading": {
           "type": "object",
@@ -106,9 +172,13 @@
         }
       },
       "required": [
-        "characterId",
+        "typeCode",
+        "axes",
+        "axisReasons",
+        "confidence",
+        "sampleSize",
+        "badges",
         "roastLines",
-        "stats",
         "reading"
       ],
       "additionalProperties": false
