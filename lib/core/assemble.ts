@@ -65,7 +65,7 @@ export function finalizeAnalysisResult({ messages, judgment }: FinalizeInput): A
     badges: classification.badges,
     roastLines: judgment?.roastLines ?? [
       `${character.name} 모드, 오늘도 정상 작동 중.`,
-      "아무렇지 않은 척해도 답장 알림은 누구보다 빠르게 확인.",
+      "짧게 말해도 하고 싶은 말은 다 들어 있는 편.",
       "대화의 기술은 만렙, 솔직한 한마디는 아직 연습 중!",
     ],
     reading: judgment?.reading ?? {
