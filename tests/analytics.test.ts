@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { axisBucket, track, typeAnalyticsProps } from "../lib/analytics";
+import { axisBucket, redactShareTokens, track, typeAnalyticsProps } from "../lib/analytics";
 import type { AxisScores, BadgeId, TypeCode } from "../lib/core/classification";
 
 describe("axisBucket", () => {
@@ -98,6 +98,41 @@ describe("typeAnalyticsProps", () => {
       vi.unstubAllEnvs();
       vi.resetModules();
     }
+  });
+});
+
+describe("redactShareTokens", () => {
+  it("masks share tokens in every SDK-added URL property before sending", () => {
+    const token = "WzIsIk9CQ0ciLDcyXQ.abcDEF_-123";
+    const url = `https://talktivity.example/r/${token}?utm=kakao`;
+    const event = redactShareTokens({
+      event: "shared_page_view",
+      properties: {
+        $current_url: url,
+        $pathname: `/r/${token}`,
+        $session_entry_url: url,
+        $referrer: "https://talktivity.example/",
+        typeCode: "OBCG",
+        direction: "70-79",
+      },
+      $set_once: { $initial_current_url: url, $initial_pathname: `/r/${token}` },
+      $set: { $current_url: url },
+    });
+
+    expect(JSON.stringify(event)).not.toContain(token);
+    expect(event?.properties).toEqual({
+      $current_url: "https://talktivity.example/r/[redacted]?utm=kakao",
+      $pathname: "/r/[redacted]",
+      $session_entry_url: "https://talktivity.example/r/[redacted]?utm=kakao",
+      $referrer: "https://talktivity.example/",
+      typeCode: "OBCG",
+      direction: "70-79",
+    });
+    expect(event?.$set_once?.$initial_pathname).toBe("/r/[redacted]");
+  });
+
+  it("passes a dropped event through", () => {
+    expect(redactShareTokens(null)).toBeNull();
   });
 });
 

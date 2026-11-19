@@ -99,6 +99,29 @@ const eventPropertyAllowlist = {
   shared_page_cta_click: [],
 } as const satisfies EventPropertyAllowlist;
 
+// Share tokens embed generated copy, so they are masked in every URL-like value the SDK adds.
+const shareTokenPath = /\/r\/[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)?/g;
+
+function redactValues(values: Record<string, unknown> | undefined): void {
+  if (!values) return;
+  for (const [name, value] of Object.entries(values))
+    if (typeof value === "string") values[name] = value.replace(shareTokenPath, "/r/[redacted]");
+}
+
+export function redactShareTokens<
+  E extends {
+    properties?: Record<string, unknown>;
+    $set?: Record<string, unknown>;
+    $set_once?: Record<string, unknown>;
+  },
+>(event: E | null): E | null {
+  if (!event) return event;
+  redactValues(event.properties);
+  redactValues(event.$set);
+  redactValues(event.$set_once);
+  return event;
+}
+
 const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 const host = process.env.NEXT_PUBLIC_POSTHOG_HOST;
 const client =
@@ -111,6 +134,7 @@ const client =
           capture_pageleave: false,
           disable_session_recording: true,
           persistence: "memory",
+          before_send: redactShareTokens,
         });
         return posthog;
       })
