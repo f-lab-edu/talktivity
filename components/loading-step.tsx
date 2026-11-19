@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 
 const messages = [
   "카톡 말투 감정 분석 중...",
-  "밀당 주도권 스탯 계산 중...",
+  "네 가지 말투 축 계산 중...",
   "팩폭 캐릭터 생성 중...",
 ] as const;
 export function LoadingStep() {
