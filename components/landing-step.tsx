@@ -47,7 +47,7 @@ export function LandingStep({
         </div>
       </div>
       <div className="landing-bottom-note">
-        <span>12가지 톡 캐릭터</span>
+        <span>16가지 톡 캐릭터</span>
         <i /> 가입 없이 무료
         <i />
         <span>대화 저장 안 함</span>
