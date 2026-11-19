@@ -1,7 +1,17 @@
 # 톡티비티
 
-카톡 대화 3~5줄로 내 톡 캐릭터를 찾는 모바일 웹 MVP입니다.
-대화는 저장하지 않습니다. 공유 링크에는 캐릭터, 스탯, 팩폭 3줄만 들어갑니다.
+카톡 대화 3~5줄로 내 톡 유형을 찾는 모바일 웹 MVP입니다.
+말투를 주도/반응(O/R), 장문/단문(L/B), 컬러/모노(C/M), 직진/조율(D/G) 4축으로 나눠
+16개 유형 캐릭터 중 하나와 배지 2종(드립, 이모티콘)을 보여 줍니다.
+길이·표현 축과 유형 코드, 이모티콘 배지는 코드가 계산하고, LLM은 주도·직진 축 점수와 근거,
+드립 여부, 팩폭 문구만 맡습니다. 계산 규칙은 `docs/SPEC.md`에 있습니다.
+
+대화는 저장하지 않습니다. 공유 링크에는 유형 코드, 4축 점수, 배지, 팩폭 3줄만 들어가고
+대화 원문, 축 근거, 연애운, 분석 턴 수는 빠집니다. 분석 이벤트도 유형 코드, 배지,
+10점 단위 축 구간만 보냅니다.
+
+v2 변경 사항: 예전 3스탯(`replyPsychology`, `pushPull`)과 LLM의 직접 캐릭터 선택, v1 공유
+링크 지원은 없어졌습니다. 기존 v1 링크는 이제 잘못된 링크 화면을 보여 줍니다.
 
 ## 시작하기
 
@@ -42,7 +52,9 @@ http://localhost:3000 을 엽니다. `.env` 없이 모의 분석, 예시 대화,
 `dev`, `build`, `start`: Next 개발/빌드/운영 서버.
 `typecheck`: 엄격한 TypeScript 검사. `lint`, `format`: Biome 검사/수정.
 `test`: Vitest 전체 단발 실행. `export-schema`: Zod v4에서 `contracts/` JSON Schema 재생성.
-`tests/golden/share-token.json`은 독립 Node HMAC로 계산한 다른 언어용 고정 벡터입니다.
+`tests/golden/share-token-v2.json`은 독립 Node HMAC로 계산한 다른 언어용 고정 벡터입니다.
+변경 후 검증은 `bun run typecheck`, `bun run lint`, `bun run test`, `bun run build` 순서로 돌립니다.
+스키마를 바꿨다면 `bun run export-schema`로 `contracts/`를 다시 만듭니다.
 `lib/core/`에는 Next/React 의존성이 없습니다.
 
 ## Kakao Developers 설정
@@ -60,7 +72,7 @@ http://localhost:3000 을 엽니다. `.env` 없이 모의 분석, 예시 대화,
 일반 브라우저는 다운로드, 카카오톡/인스타그램 내부 브라우저는 길게 눌러 저장하는
 이미지 모달을 제공합니다. 로그인, DB, 실제 결제는 없습니다.
 Pretendard Bold OTF와 SIL OFL 라이선스는 `assets/`에 포함되어 외부 폰트 요청이 없습니다.
-캐릭터 SVG는 Twemoji (CC BY 4.0, jdecked/twemoji)이며 `public/characters/`에
+유형 16종과 배지 2종의 SVG는 Twemoji (CC BY 4.0, jdecked/twemoji)이며 `public/characters/`에
 라이선스와 함께 포함했습니다. 파일별 원본 이모지와 수정 내용(`role`, `aria-label` 추가)은
 `public/characters/LICENSE` 머리말에 적었고, 캐릭터 SVG를 추가하면 그 목록도 함께 갱신합니다.
 이모지 글꼴이 없는 기기에서도 동일하게 표시합니다.

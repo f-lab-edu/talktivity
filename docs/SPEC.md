@@ -56,35 +56,103 @@ All user-facing copy is Korean. Mobile-first: content column `max-w-[480px] mx-a
 Provide `.env.example` documenting all of them. Default models: pick the current cheap tier
 for each provider (Anthropic Haiku-class, OpenAI mini-class) and allow override via `LLM_MODEL`.
 
-## Result schema (`lib/core/schema.ts`)
+## Result schema (`lib/core/schema.ts`, `contracts/analysis-result.json`)
 
 ```
 AnalysisResult {
-  characterId: enum of catalog ids
-  roastLines: [string, string, string]      // 3-line 팩폭 summary, each <= 60 chars
-  stats: {
-    initiative: int 0-100     // 대화 주도권 (%)
-    replyPsychology: int 0-100 // 답장 속도 심리 (점수)
-    pushPull: int 0-100       // 밀당 지수 (%)
-  }
+  typeCode: one of 16 codes (OLCD ... RBMG)
+  axes: { direction, length, color, stance }         // int 0-100, strength of the first pole
+  axisReasons: { direction, length, color, stance }  // Korean, 1-80 chars each
+  confidence: "low" | "medium" | "high"
+  sampleSize: int >= 0                               // analyzed turns
+  badges: ("comedian" | "emoji")[]                   // max 2, canonical order comedian, emoji
+  roastLines: [string, string, string]               // 1-60 chars each
   reading: {
-    loveFortune: string       // 연애운/대화 운 (2-4 sentences)
-    tips: string[3]           // 대화 팁
-    recommendedLines: string[2-3] // 추천 대화법 (example lines)
+    loveFortune: string             // 2-4 sentences
+    tips: string[3]
+    recommendedLines: string[2-3]
   }
 }
 ```
 
-The LLM chooses `characterId` from the catalog and writes the personalized text. Use AI SDK
-structured output (check the installed `ai` v7 API for the current object-generation call;
-do not guess) with this zod schema, validate, retry once on failure, then fall back to the mock.
+The result stores no separate character id. Character metadata and asset ids are looked
+up in code from `typeCode` (`lib/core/characters.ts`).
+
+## Four-axis classification (`lib/core/classification.ts`)
+
+Axis order is fixed: O/R direction (주도/반응), L/B length (장문/단문), C/M color (컬러/모노),
+D/G stance (직진/조율). Every value is the strength of the first pole (O, L, C, D).
+
+Turns: consecutive messages from the same speaker merge into one turn. If a speaker `나`
+exists, only `나` turns are analyzed; otherwise every unattributed turn is analyzed.
+
+Raw scores (`rawScore`) and evidence counts (`n`):
+
+| Axis | rawScore | n |
+|---|---|---|
+| L/B | `clamp(round(m * 2), 0, 100)`, `m` = median turn length in characters with expression tokens removed | analyzed turns |
+| C/M | `clamp(round(d * 50), 0, 100)`, `d` = expression tokens per turn (Unicode emoji, `[이모티콘]`, runs of ㅋ/ㅎ/ㅠ/ㅜ, repeated `!?~`, exclamation/emotion words) | analyzed turns |
+| O/R | LLM integer score; fallback `round((question + proposal) / n * 100)` | question + proposal + reaction hint matches |
+| D/G | LLM integer score; fallback `round(assertion / n * 100)` | assertion + softener + delegation + cushion hint matches |
+
+When `n == 0`, rawScore is defined as 50.
+
+Displayed score (`axes`): `λ = n / (n + 4)`, `s = Math.round(50 + λ * (rawScore - 50))`, then a
+direction-preserving clamp: `rawScore < 50 → min(s, 49)`, `rawScore > 50 → max(s, 51)`,
+`rawScore == 50 → 50`.
+
+Letter rule (four cases only): `rawScore > 50` → first pole; `rawScore < 50` → second pole;
+`rawScore == 50` with `n ≥ 1` → first pole; `n == 0` → 32-bit FNV-1a over the UTF-8 bytes of
+`${axisId}:${normalized analyzed text}`, even hash → first pole, odd → second pole.
+Scores 45-55 are shown as 경계형 in the UI, but the type code is always one code.
+
+### Ownership
+
+- Code computes: turns, hints, L/B and C/M scores, all evidence counts, shrinkage, letters,
+  `typeCode`, confidence, `sampleSize`, the `emoji` badge.
+- The LLM returns only the O/R and D/G integer scores with a reason (80 chars max) each, the
+  `comedian` flag, the roast lines and the reading. Its output schema is strict, so it cannot
+  return a type code, L/B or C/M scores or a character. With no model, or after two failed
+  attempts, the deterministic fallback scores above are used and `comedian` is false.
+
+### Confidence
+
+`semanticN = min(n(O/R), n(D/G))`. `low` if fewer than 3 turns or `semanticN < 2`;
+`medium` if fewer than 5 turns or `semanticN < 4`; otherwise `high`. A type is always
+returned regardless of confidence. On `low`, the result shows exactly:
+`분석 신뢰도가 낮아요. 대화를 조금 더 추가하면 더 정확해져요.`
+
+### Badges
+
+- `emoji` (이모티콘): code-awarded when emoji/`[이모티콘]` appear 2+ times in total, or in at
+  least 50% of analyzed turns.
+- `comedian` (드립): the LLM judges whether the user created humor in the conversation. The
+  mock fallback never awards it.
 
 ## Character catalog (`lib/core/characters.ts`)
 
-12 fixed types. Each has: `id`, `name` (Korean, easy to say out loud), `emoji`, `tagline`,
-`color` (hex pair for gradient - use hex, not oklch, so OG rendering and image capture work),
-and a generic `description` shown on the shared page. Include the brief's examples:
-"플러팅 장인", "프레임 유지하는 차도남", "은근히 답정너", "읽씹 방지 파수꾼", plus 8 more in the same tone.
+16 types, one per code, plus 2 badges. Each type has `name`, `assetId` (SVG in
+`public/characters/`), `tagline`, `color` (hex pair, not oklch, so OG rendering and image
+capture work) and a generic `description` for the shared page.
+
+| Code | Name | assetId | Code | Name | assetId |
+|---|---|---|---|---|---|
+| OLCD | 약속 설계자 | planner | RLCD | 은근히 답정너 | answer |
+| OLCG | 읽씹 방지 파수꾼 | guardian | RLCG | 장문 편지 작가 | novelist |
+| OLMD | 본론 브리핑 장인 | briefing | RLMD | 말투 탐정 | detective |
+| OLMG | 신중한 안부 장인 | checkin | RLMG | 잔잔한 공감 DJ | nightowl |
+| OBCD | 한 줄 스파크 | spark | RBCD | 단호박 치어리더 | cheerleader |
+| OBCG | 플러팅 장인 | flirt | RBCG | 리액션 햇살 요정 | sunshine |
+| OBMD | 용건만 통보관 | dispatch | RBMD | 프레임 유지하는 차도남 | cool |
+| OBMG | 담백한 에스코트 | escort | RBMG | 단답 미니멀리스트 | minimalist |
+
+Badges: `comedian` 드립 (asset `comedian`), `emoji` 이모티콘 (asset `emoji`).
+
+### Breaking change (v2)
+
+The earlier 3-stat result (`initiative`, `replyPsychology`, `pushPull`), the 12-character
+catalog with direct LLM selection of `characterId`, and v1 share tokens are retired. Existing
+v1 links now render the invalid-link page.
 
 ## Input & privacy
 
@@ -117,16 +185,18 @@ Flow: rate limit (analyze: 3 req / 10 min per IP; example: 10 req / 10 min, coun
 
 ## Share token (`lib/core/share-token.ts`)
 
-- Payload v1 encodes ONLY: version, characterId, the three stats, the three roast lines.
-  Never conversation text. (Reading content is not shared - keeps URLs short.)
+- Payload v2 holds ONLY `typeCode`, `axes`, `badges` and `roastLines`. Never conversation
+  text, axis reasons, reading or sample size.
 - Canonical encoding: a fixed-order JSON array
-  `[1, characterId, initiative, replyPsychology, pushPull, roast1, roast2, roast3]`
-  serialized with `JSON.stringify` (no whitespace), UTF-8 bytes, base64url without padding.
+  `[2, typeCode, direction, length, color, stance, badges, roast1, roast2, roast3]`,
+  e.g. `[2,"OBCG",72,38,81,44,["comedian","emoji"],"…","…","…"]`, serialized with
+  `JSON.stringify` (no whitespace), UTF-8 bytes, base64url without padding.
 - Signature: HMAC-SHA256 over the exact base64url payload string, truncated to 16 bytes,
-  base64url. Token = `payload.signature`. Use Web Crypto (works in Node and edge).
-- Verify rejects bad signature, unknown version, invalid schema.
-- `tests/golden/share-token.json`: several `{ secret, payload, token }` vectors including
-  Korean text and emoji; tests assert both encode and verify against them.
+  base64url. Token = `payload.signature`. Uses Web Crypto (works in Node and edge).
+- Verify rejects bad signatures, non-canonical encodings, invalid schema and any version
+  other than 2. A v1 array is rejected even with a valid signature.
+- `tests/golden/share-token-v2.json`: `{ secret, payload, token }` vectors including Korean
+  text, emoji, empty badges and 50/50 boundary scores; tests assert encode and verify.
 
 ## Screens
 
@@ -140,11 +210,11 @@ Persist the last result in `sessionStorage` so refresh on the result step keeps 
    secondary "예시 대화로 1초 만에 테스트하기".
 2. **InputStep**: textarea with placeholder example, speaker chips (when detected),
    relationship chips, "팩폭 분석 시작하기" with validation.
-3. **LoadingStep**: messages rotate "카톡 말투 감정 분석 중...", "밀당 주도권 스탯 계산 중...",
+3. **LoadingStep**: messages rotate "카톡 말투 감정 분석 중...", "네 가지 말투 축 계산 중...",
    "팩폭 캐릭터 생성 중..." with animation. Minimum display ~2.4s so all three are seen,
    but don't wait longer than the API.
 4. **ResultStep**: the shareable card (emoji/illustration, character name, tagline, 3 roast
-   lines, three animated stat bars) - contains no conversation text; below it the long
+   lines, four animated axis bars, confidence, badges) - contains no conversation text; below it the long
    reading section (연애운, 팁, 추천 대화법); share/save buttons; paywall teaser.
 5. **Share**: `lib/kakao.ts` loads the SDK via `next/script`, `Kakao.init` once, then
    `Kakao.Share.sendDefault` feed template:
@@ -165,17 +235,21 @@ Persist the last result in `sessionStorage` so refresh on the result step keeps 
 
 Server component: verify token (invalid -> friendly error page with CTA). `generateMetadata`
 sets og:title `[톡티비티] 나 '[캐릭터명]' 나왔어 ㅋㅋㅋ`, og:description, og:image.
-Page shows "친구의 결과" card (character, stats, roast lines, generic description) and a big
+Page shows "친구의 결과" card (character, axes, badges, roast lines, generic description) and a big
 CTA "나도 무료로 팩폭 분석하기" -> `/`. OG image route (e.g. `app/r/[token]/opengraph-image.tsx`
-or `app/api/og/route.tsx`) renders 1200x630 with Pretendard, character name, emoji, stats.
+or `app/api/og/route.tsx`) renders 1200x630 with Pretendard, character name, character SVG, axes.
 Also a default OG image for `/`.
 
 ## Analytics events (`lib/analytics.ts`)
 
-`landing_view`, `cta_click` ({variant: main|example}), `analyze_submit`, `analyze_success`,
-`analyze_error` ({code}), `result_view` ({characterId}), `share_kakao_click`,
-`share_link_copy`, `image_save` ({method}), `paywall_teaser_click` ({tier: 1000|1900}),
-`shared_page_view` ({characterId}), `shared_page_cta_click`.
+`landing_view`, `cta_click` ({variant: main|example}), `input_mode_text`, `extract_submit`
+({count}), `extract_success`, `extract_error` ({code}), `analyze_submit`, `analyze_success`,
+`analyze_error` ({code}), `result_view`, `share_kakao_click`, `share_link_copy`,
+`image_save` ({method}), `paywall_teaser_click` ({tier: 1000|1900}), `shared_page_view`,
+`shared_page_cta_click`.
+
+`result_view` and `shared_page_view` send only `typeCode`, `badges` and each axis as a
+10-point bucket (`0-9` ... `90-100`). Properties outside the allowlist are dropped.
 
 ## Example conversation
 
