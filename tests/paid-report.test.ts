@@ -1,4 +1,3 @@
-import { generateText } from "ai";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import {
   buildReportPrompt,
@@ -7,11 +6,11 @@ import {
   paidReportSchema,
 } from "../lib/core/billing/report";
 
+const generate = vi.hoisted(() => vi.fn<() => Promise<{ readonly output: unknown }>>());
 vi.mock("ai", async (importOriginal) => ({
   ...(await importOriginal<typeof import("ai")>()),
-  generateText: vi.fn(),
+  generateText: generate,
 }));
-const generate = vi.mocked(generateText);
 const request = {
   conversation: "나: 오늘은 어땠어?\n상대: 나 오늘 쉬어",
   relationship: "연인",
@@ -56,7 +55,7 @@ it("키 또는 프롬프트가 없으면 모델 호출 없이 mock을 반환한�
 });
 it("모델 출력을 검증하여 유료 리포트로 반환한다", async () => {
   const output = { ...mockPaidReport(request), headline: "모델이 만든 제목" };
-  generate.mockResolvedValue({ output } as Awaited<ReturnType<typeof generateText>>);
+  generate.mockResolvedValue({ output });
   expect(await generatePaidReport(request, config, "fake")).toEqual(output);
 });
 it("실패를 한 번 재시도한 후 mock으로 돌아가며 대화를 로그에 남기지 않는다", async () => {

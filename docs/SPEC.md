@@ -9,8 +9,10 @@ A 2030 user pastes 3-5 lines of a KakaoTalk conversation and gets a "fact-bomb" 
 character card with stats, then shares it to KakaoTalk. Goal: 6 of 10 users who submit
 input reach the result and share or save it.
 
-Out of scope for v1: real payments, storing conversations in a DB,
-KakaoTalk .txt export parsing.
+The v1 flow remains free. Payments v2 adds a server-only credit ledger, coupons,
+Paddle checkout/webhooks and saved paid reports. Payment UI and live account setup remain
+out of scope for this backend increment. Storing conversations and KakaoTalk .txt export
+parsing remain out of scope.
 
 All user-facing copy is Korean. Mobile-first: content column `max-w-[480px] mx-auto`.
 
@@ -43,8 +45,9 @@ All user-facing copy is Korean. Mobile-first: content column `max-w-[480px] mx-a
    only for REST APIs, the shared-result page metadata, and the OG image. No custom caching.
 6. Optional Kakao/Google login starts only at paid result cards. Supabase Auth owns browser
    PKCE sessions in localStorage; APIs verify ES256 Bearer tokens with Supabase JWKS.
-   Business tables are server-only. Store only profile ID, provider and nickname, never
-   conversations or results. No cookie sessions, middleware/proxy or analytics identify.
+   Business tables are server-only. Store profile ID, provider and nickname, paid report
+   content and the credit ledger. Never store original conversations or screenshot input.
+   Free analysis results are not persisted. No cookie sessions, middleware/proxy or analytics identify.
 
 ## Graceful degradation (every external key optional)
 
@@ -59,6 +62,9 @@ All user-facing copy is Korean. Mobile-first: content column `max-w-[480px] mx-a
 | `NEXT_PUBLIC_SITE_URL` | Default `http://localhost:3000`; used for absolute OG/Kakao image URLs |
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Keep the existing coming-soon dialog on paid cards; login is disabled |
 | `SUPABASE_SECRET_KEY` | Profile API returns 503; analysis and sharing remain available |
+| `REPORT_SYSTEM_PROMPT` | Warn once and generate the deterministic paid report mock, like a missing LLM provider key |
+| `PADDLE_ENV` (`sandbox`/`production`), `PADDLE_API_KEY`, `PADDLE_WEBHOOK_SECRET`, `PADDLE_PRICE_ID` | Checkout returns 503 `BILLING_DISABLED`; credits, coupons and reports remain available. Webhooks require their secret, otherwise return 503. |
+| `CREDITS_PER_PURCHASE` | Positive integer credits per pack, defaults to 1; invalid catalog configuration disables checkout |
 
 Provide `.env.example` documenting all of them. Default models: pick the current cheap tier
 for each provider (Anthropic Haiku-class, OpenAI mini-class) and allow override via `LLM_MODEL`.
@@ -189,6 +195,49 @@ Request: `{ conversation: string, relationship: enum, mySpeaker?: string }` (zod
 Flow: rate limit (analyze: 3 req / 10 min per IP; example: 10 req / 10 min, counted separately) -> validate -> mask -> analyze -> validate output
 -> return `{ result: AnalysisResult, shareToken: string }`. Errors return
 `{ error: { code, message } }` with Korean messages and proper status (400/429/500).
+
+## Payments v2 REST APIs
+
+All seven endpoints return `Cache-Control: no-store`. Except the signed Paddle webhook,
+each uses the existing ES256 Bearer/JWKS authentication; missing Supabase environment
+returns 503 `AUTH_DISABLED`, missing/invalid authentication returns 401.
+
+| Method and path | Request and response |
+|---|---|
+| `GET /api/credits` | `{ balance }`, including negative balances after refunds |
+| `POST /api/billing/checkout` | `{ posthogId?: string <=200 }` → `{ transactionId }`; server supplies authenticated `custom_data.userId`, catalog price and quantity 1 |
+| `POST /api/billing/webhook` | Raw request text + `Paddle-Signature`, HMAC-SHA256 with default five-second tolerance → `{ received: true }`; invalid signature 401, successful or ignored event 200, storage failure 500 for Paddle retries |
+| `POST /api/coupons/redeem` | `{ code }` → `{ credited, balance }`; trim, uppercase and remove whitespace before validation (`A-Z`, digits, hyphens, 4–32 chars); 5 attempts / 10 minutes per user ID |
+| `POST /api/reports` | Analyze request → `{ report: { id, content, createdAt }, balance }`; balance check before LLM, 3 attempts / 10 minutes per user ID, shared global LLM cap, PII masking, generation, atomic DB save and debit |
+| `GET /api/reports` | `{ reports: [{ id, headline, createdAt }] }`, own reports only, newest first, limit 50 |
+| `GET /api/reports/[id]` | `{ report: { id, content, createdAt }, balance }`, own report only, 404 for missing, foreign or malformed ID |
+
+Coupon errors: 400 `COUPON_INVALID`, 404 `COUPON_NOT_FOUND`, 410 `COUPON_EXPIRED` or
+`COUPON_EXHAUSTED`, 409 `COUPON_ALREADY_USED`. Reports return 402 `INSUFFICIENT_CREDITS`
+both before generation and when another request spends the last credit before saving.
+Generation uses analyzer provider/model configuration and the same two-attempt deterministic
+mock fallback. A successful saved report consumes exactly one credit; a save failure saves
+neither report nor debit.
+
+`lib/core/billing/` owns catalog parsing, coupon normalization, webhook decisions, signature
+verification, paid report validation and prompt-message construction. Server adapters own
+environment access and a shared secret-key Supabase client. System prompt text lives only in
+ignored `docs/local/prompts/*.md` and private environment variables.
+
+`0002_billing.sql` creates server-only `credit_ledger`, `coupons` and `reports`, with RLS and
+no client policies. Table privileges and all five billing functions are restricted to
+`service_role`; functions pin `search_path = public`. Purchases and refunds are idempotent
+by ledger reference. Approved refund adjustments recover the purchase's full credit amount,
+even if credits have already been spent. Refunds arriving before the purchase ledger return
+500 so Paddle can retry. User advisory transaction locks serialize report balance checks,
+inserts and debits. Coupon rows are locked during redemption. No original conversation is
+stored in any billing table. Create promotional coupons by SQL insert; no admin UI is added.
+
+Generated JSON Schema contracts in `contracts/` cover credits, checkout, coupon redemption,
+paid reports, report responses and report lists. `tests/golden/paddle-signature.json` contains
+portable UTF-8 signature vectors. `bun run test` stays Docker-free; `bun run test:db` starts
+an isolated Postgres 17 container on localhost:54329, emulates Supabase default privileges,
+applies migrations, tests permissions/idempotency/concurrency, then tears down.
 
 ## Share token (`lib/core/share-token.ts`)
 

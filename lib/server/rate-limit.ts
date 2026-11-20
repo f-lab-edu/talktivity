@@ -3,7 +3,13 @@ import { Redis } from "@upstash/redis";
 
 // analyze and extract call the LLM (Gemini free tier: 15 RPM), so they get tight per-IP caps.
 // example only signs a precomputed result, so it is limited separately and loosely.
-export const rateLimitPolicies = { analyze: 3, extract: 5, example: 10 } as const;
+export const rateLimitPolicies = {
+  analyze: 3,
+  extract: 5,
+  example: 10,
+  coupon: 5,
+  report: 3,
+} as const;
 export type RateLimitPolicy = keyof typeof rateLimitPolicies;
 // All LLM calls from every user share one budget below the provider's RPM, so a
 // traffic spike gets a "busy" message instead of silently degrading to mock results.
@@ -46,6 +52,18 @@ const redisLimiters = redis
         limiter: Ratelimit.slidingWindow(globalLlmPerMinute, "1 m"),
         analytics: false,
         prefix: "talktivity:llm-global",
+      }),
+      coupon: new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(rateLimitPolicies.coupon, "10 m"),
+        analytics: false,
+        prefix: "talktivity:coupon",
+      }),
+      report: new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(rateLimitPolicies.report, "10 m"),
+        analytics: false,
+        prefix: "talktivity:report",
       }),
     }
   : null;
