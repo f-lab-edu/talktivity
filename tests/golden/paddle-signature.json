@@ -1,0 +1,20 @@
+[
+  {
+    "secret": "paddle-test-secret",
+    "ts": 1671552777,
+    "rawBody": "{\"event_type\":\"transaction.completed\",\"data\":{\"id\":\"txn_test\"}}",
+    "signature": "ts=1671552777;h1=d8922ecbb8ad2368cb6130c3ff2b1b68c0371d485f3ef48c3ce76af12906fa1c"
+  },
+  {
+    "secret": "시크릿$golden",
+    "ts": 1795132800,
+    "rawBody": "{\n  \"message\": \"안녕 😊\", \"n\": 1\n}\n",
+    "signature": "ts=1795132800;h1=34fa252fa6dcb117892d111d9e6b8ddd4a5c533ed43478806b3fc5b3843b0e69"
+  },
+  {
+    "secret": "rotation-secret",
+    "ts": 1795132805,
+    "rawBody": "",
+    "signature": "ts=1795132805;h1=64ccbd2b04d913fe00a2c12d3e9be05c57f78762a58709a3c0ed4c660ce534ce"
+  }
+]
