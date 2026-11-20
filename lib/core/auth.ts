@@ -9,6 +9,14 @@ export const authUserSchema = z.object({
 export type AuthUser = Readonly<z.infer<typeof authUserSchema>>;
 export const meResponseSchema = z.object({ user: authUserSchema });
 
+export function nicknameFromMetadata(metadata: Readonly<Record<string, unknown>>): string | null {
+  // First nonempty string wins in this order; trim and cap to 80 UTF-16 code units.
+  const nickname = ["name", "full_name", "nickname", "preferred_username", "user_name"]
+    .map((key) => metadata[key])
+    .find((value): value is string => typeof value === "string" && value.trim().length > 0);
+  return nickname?.trim().slice(0, 80) ?? null;
+}
+
 const claimsSchema = z.object({
   sub: z.uuid(),
   exp: z.number(),
@@ -27,13 +35,9 @@ export async function verifyAccessToken(
     requiredClaims: ["exp", "sub"],
   });
   const claims = claimsSchema.parse(payload);
-  // First nonempty string wins in this order; trim and cap to 80 UTF-16 code units.
-  const nickname = ["name", "full_name", "nickname", "preferred_username", "user_name"]
-    .map((key) => claims.user_metadata?.[key])
-    .find((value): value is string => typeof value === "string" && value.trim().length > 0);
   return {
     id: claims.sub,
     provider: claims.app_metadata.provider,
-    nickname: nickname?.trim().slice(0, 80) ?? null,
+    nickname: nicknameFromMetadata(claims.user_metadata ?? {}),
   };
 }

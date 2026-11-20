@@ -1,9 +1,10 @@
 "use client";
 
-import { Copy, Download, Info, LockKeyhole, MessageCircle, RotateCcw } from "lucide-react";
+import { Copy, Download, Info, MessageCircle, RotateCcw } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useId, useRef, useState } from "react";
 import { ResultCard } from "@/components/result-card";
+import { ResultPaywall } from "@/components/result-paywall";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -22,11 +23,6 @@ const confidenceLabels: Readonly<Record<Confidence, string>> = {
   high: "높음",
 };
 
-const teaserItems = [
-  { tier: 1000, title: "상대방 속마음 정밀 리포트" },
-  { tier: 1900, title: "대화가 절대로 안 끊기는 맞춤 답장 3개 추천" },
-] as const;
-
 export function ResultStep({
   data,
   onRestart,
@@ -35,10 +31,8 @@ export function ResultStep({
   readonly onRestart: () => void;
 }) {
   const card = useRef<HTMLDivElement>(null);
-  const paywall = useRef<HTMLElement>(null);
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
-  const [teaser, setTeaser] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const explanationId = useId();
   const character = getCharacter(data.result.typeCode);
@@ -53,25 +47,6 @@ export function ResultStep({
       }),
     );
   }, [data.result.axes, data.result.badges, data.result.typeCode]);
-  useEffect(() => {
-    const section = paywall.current;
-    if (!section || typeof IntersectionObserver === "undefined") return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          observer.unobserve(entry.target);
-          const item = teaserItems.find(
-            ({ tier }) => String(tier) === entry.target.getAttribute("data-tier"),
-          );
-          if (item) track("paywall_teaser_view", { tier: item.tier, placement: "result" });
-        }
-      },
-      { threshold: 0.5 },
-    );
-    for (const card of section.querySelectorAll(".teaser-card")) observer.observe(card);
-    return () => observer.disconnect();
-  }, []);
   async function copy() {
     try {
       await navigator.clipboard.writeText(url);
@@ -207,37 +182,10 @@ export function ResultStep({
       <p role="status" className="action-notice">
         {notice}
       </p>
-      <section className="paywall" ref={paywall}>
-        <div className="section-label">
-          <h2>조금 더 궁금하다면</h2>
-          <Badge>곧 만나요</Badge>
-        </div>
-        {teaserItems.map((item) => (
-          <button
-            className="teaser-card"
-            type="button"
-            key={item.tier}
-            data-tier={item.tier}
-            onClick={() => {
-              track("paywall_teaser_click", { tier: item.tier });
-              setTeaser(true);
-            }}
-          >
-            <LockKeyhole size={20} />
-            <span>{item.title}</span>
-            <strong>{item.tier.toLocaleString("ko-KR")}원</strong>
-          </button>
-        ))}
-      </section>
+      <ResultPaywall />
       <Button variant="ghost" className="full-width restart" onClick={onRestart}>
         <RotateCcw size={16} /> 다른 대화도 분석하기
       </Button>
-      <Dialog open={teaser} onOpenChange={setTeaser}>
-        <DialogContent>
-          <DialogTitle>곧 오픈될 서비스입니다!</DialogTitle>
-          <DialogDescription>(1차 MVP 테스트 중) 조금만 기다려 주세요.</DialogDescription>
-        </DialogContent>
-      </Dialog>
       <Dialog
         open={preview !== null}
         onOpenChange={(open) => {

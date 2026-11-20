@@ -63,6 +63,34 @@ http://localhost:3000 을 엽니다. `.env` 없이 모의 분석, 예시 대화,
 스키마를 바꿨다면 `bun run export-schema`로 `contracts/`를 다시 만듭니다.
 `lib/core/`에는 Next/React 의존성이 없습니다.
 
+## 선택 로그인 설정
+
+Supabase 프로젝트를 만든 후 Auth에서 ES256 서명 키와 Kakao·Google 공급자를 켜세요.
+Site URL과 Redirect URLs에 운영 도메인의 `/`와 `http://localhost:3000/`를 등록합니다.
+두 공급자 모두 **Allow users without an email**을 켜고 이메일 수집과 계정 연결을
+사용하지 않습니다. `supabase/migrations/0001_profiles.sql`을 적용하고 서버에
+`SUPABASE_SECRET_KEY`를 설정하세요. 브라우저는 공개 키만 사용하고 DB를 조회하지 않습니다.
+
+Kakao Developers에서 카카오 로그인을 켜고 닉네임 동의 항목만 사용하세요.
+REST API 키·Client Secret을 Supabase Kakao 공급자에 등록하고 리디렉션 URI는
+`https://<project-ref>.supabase.co/auth/v1/callback`으로 설정합니다.
+Google Cloud 웹 OAuth 클라이언트도 같은 Supabase 콜백을 등록합니다.
+
+Supabase Auth 기본 Kakao scope는 `account_email,profile_image,profile_nickname`,
+Google은 `email,profile`입니다. `options.scopes`는 기본값에 추가하므로 사용하지 않고,
+`options.queryParams.scope`로 Kakao는 `profile_nickname`, Google은 `openid profile`만
+요청합니다. Kakao의 `account_email` 동의 항목이나 비즈 앱 전환은 필요하지 않습니다.
+근거는 Supabase의 Kakao 공식 가이드와 Auth 소스의 `provider/kakao.go`,
+`provider/google.go`, `external.go`, `custom_oauth_admin.go`입니다.
+실제 프로젝트를 설정한 뒤 동의 화면의 scope와 이메일 없는 로그인 허용을 확인하세요.
+이메일을 제공하지 않으므로 이메일 기반 자동 계정 연결도 발생하지 않습니다.
+이미 연결된 기존 Supabase 계정을 분리하는 기능은 제공하지 않습니다.
+
+로그인은 결과 화면 유료 카드에서만 시작합니다. 세션은 브라우저 localStorage의 PKCE
+방식을 쓰며, OAuth 복귀 후 sessionStorage에 남은 결과와 유료 카드 안내를 다시 엽니다.
+인스타그램 내부 브라우저에서는 구글 버튼을 비활성화하고 외부 브라우저 이용을 안내합니다.
+프로필 API 오류가 나도 분석 결과는 계속 볼 수 있습니다.
+
 ## Kakao Developers 설정
 
 1. Kakao Developers에서 앱을 생성하고 앱 키의 **JavaScript 키**를 확인합니다.

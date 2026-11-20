@@ -68,6 +68,10 @@ type EventProps = {
   readonly image_save: { readonly method: string };
   readonly paywall_teaser_view: { readonly tier: 1000 | 1900; readonly placement: "result" };
   readonly paywall_teaser_click: { readonly tier: 1000 | 1900 };
+  readonly login_dialog_view: { readonly tier: 1000 | 1900 };
+  readonly login_start: { readonly provider: "kakao" | "google" };
+  readonly login_success: { readonly provider: "kakao" | "google" };
+  readonly logout: undefined;
   readonly shared_page_view: TypeAnalyticsProps;
   readonly shared_page_cta_click: undefined;
 };
@@ -97,6 +101,10 @@ const eventPropertyAllowlist = {
   image_save: ["method"],
   paywall_teaser_view: ["tier", "placement"],
   paywall_teaser_click: ["tier"],
+  login_dialog_view: ["tier"],
+  login_start: ["provider"],
+  login_success: ["provider"],
+  logout: [],
   shared_page_view: ["typeCode", "badges", "direction", "length", "color", "stance"],
   shared_page_cta_click: [],
 } as const satisfies EventPropertyAllowlist;

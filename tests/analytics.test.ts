@@ -108,6 +108,52 @@ describe("typeAnalyticsProps", () => {
 });
 
 describe("track", () => {
+  it("로그인 이벤트에서 ID와 닉네임을 제거한다", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_HOST", "");
+    vi.resetModules();
+    const debug = vi.spyOn(console, "debug").mockImplementation(() => {});
+    try {
+      const { track: freshTrack } = await import("../lib/analytics");
+      for (const event of ["login_start", "login_success"]) {
+        Reflect.apply(freshTrack, undefined, [
+          event,
+          {
+            provider: "kakao",
+            id: "private-id",
+            nickname: "private-name",
+          },
+        ]);
+      }
+      Reflect.apply(freshTrack, undefined, [
+        "login_dialog_view",
+        {
+          tier: 1900,
+          id: "private-id",
+          nickname: "private-name",
+        },
+      ]);
+      Reflect.apply(freshTrack, undefined, [
+        "logout",
+        {
+          id: "private-id",
+          nickname: "private-name",
+        },
+      ]);
+      expect(debug.mock.calls).toEqual([
+        ["[분석 이벤트]", "login_start", { provider: "kakao" }],
+        ["[분석 이벤트]", "login_success", { provider: "kakao" }],
+        ["[분석 이벤트]", "login_dialog_view", { tier: 1900 }],
+        ["[분석 이벤트]", "logout", {}],
+      ]);
+    } finally {
+      debug.mockRestore();
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
+  });
+
   it("passes tier and placement for paywall_teaser_view", async () => {
     vi.stubEnv("NODE_ENV", "development");
     vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "");
