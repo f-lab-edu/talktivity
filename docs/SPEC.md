@@ -9,7 +9,7 @@ A 2030 user pastes 3-5 lines of a KakaoTalk conversation and gets a "fact-bomb" 
 character card with stats, then shares it to KakaoTalk. Goal: 6 of 10 users who submit
 input reach the result and share or save it.
 
-Out of scope for v1: sign-up/login, real payments, storing conversations in a DB,
+Out of scope for v1: real payments, storing conversations in a DB,
 KakaoTalk .txt export parsing.
 
 All user-facing copy is Korean. Mobile-first: content column `max-w-[480px] mx-auto`.
@@ -40,7 +40,11 @@ All user-facing copy is Korean. Mobile-first: content column `max-w-[480px] mx-a
 4. **Versioned, canonical share token** (see below), with golden test vectors in
    `tests/golden/` that a future backend in another language can reuse.
 5. Keep Next usage simple: the analysis flow is client components; server features are used
-   only for `/api/analyze`, the shared-result page metadata, and the OG image. No custom caching.
+   only for REST APIs, the shared-result page metadata, and the OG image. No custom caching.
+6. Optional Kakao/Google login starts only at paid result cards. Supabase Auth owns browser
+   PKCE sessions in localStorage; APIs verify ES256 Bearer tokens with Supabase JWKS.
+   Business tables are server-only. Store only profile ID, provider and nickname, never
+   conversations or results. No cookie sessions, middleware/proxy or analytics identify.
 
 ## Graceful degradation (every external key optional)
 
@@ -52,6 +56,8 @@ All user-facing copy is Korean. Mobile-first: content column `max-w-[480px] mx-a
 | `NEXT_PUBLIC_KAKAO_JS_KEY` | Kakao button falls back to Web Share API, then copy-link |
 | `SHARE_TOKEN_SECRET` | Dev-only fixed fallback secret with a warning; in production, throw at startup of the share routes |
 | `NEXT_PUBLIC_SITE_URL` | Default `http://localhost:3000`; used for absolute OG/Kakao image URLs |
+| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Keep the existing coming-soon dialog on paid cards; login is disabled |
+| `SUPABASE_SECRET_KEY` | Profile API returns 503; analysis and sharing remain available |
 
 Provide `.env.example` documenting all of them. Default models: pick the current cheap tier
 for each provider (Anthropic Haiku-class, OpenAI mini-class) and allow override via `LLM_MODEL`.

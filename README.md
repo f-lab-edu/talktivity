@@ -30,17 +30,19 @@ http://localhost:3000 을 엽니다. `.env` 없이 모의 분석, 예시 대화,
 
 `.env.example`을 `.env.local`로 복사해서 필요한 값만 설정하세요.
 
-| 변수                                                    | 용도와 기본 동작                                                   |
-| ------------------------------------------------------- | ------------------------------------------------------------------ |
-| `LLM_PROVIDER`                                          | `mock`(기본), `anthropic`, `openai`, `google`                      |
-| `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY` | 선택한 공급자 키가 없으면 결정적 mock                              |
-| `LLM_MODEL`                                             | 기본 `claude-haiku-5-5` / `gpt-5.4-mini` / `gemini-3.5-flash-lite` |
-| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`    | 둘 다 없으면 인스턴스 메모리 제한, 운영 시 Redis 설정              |
-| `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST`   | 둘 다 있어야 이벤트 수집, 자동 클릭/세션 녹화 비활성               |
-| `NEXT_PUBLIC_KAKAO_JS_KEY`                              | 없으면 Web Share, 미지원이면 링크 복사                             |
-| `SHARE_TOKEN_SECRET`                                    | 개발용 대체값 제공. 운영 시작 시 필수, 변경하면 기존 링크 무효     |
-| `NEXT_PUBLIC_SITE_URL`                                  | 기본 `http://localhost:3000`, 배포 시 실제 HTTPS 도메인            |
-| `NEXT_PUBLIC_API_BASE_URL`                              | 기본 빈 문자열, REST API 분리 시 사용                              |
+| 변수                                                               | 용도와 기본 동작                                                   |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------ |
+| `LLM_PROVIDER`                                                     | `mock`(기본), `anthropic`, `openai`, `google`                      |
+| `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY`            | 선택한 공급자 키가 없으면 결정적 mock                              |
+| `LLM_MODEL`                                                        | 기본 `claude-haiku-5-5` / `gpt-5.4-mini` / `gemini-3.5-flash-lite` |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`               | 둘 다 없으면 인스턴스 메모리 제한, 운영 시 Redis 설정              |
+| `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST`              | 둘 다 있어야 이벤트 수집, 자동 클릭/세션 녹화 비활성               |
+| `NEXT_PUBLIC_KAKAO_JS_KEY`                                         | 없으면 Web Share, 미지원이면 링크 복사                             |
+| `SHARE_TOKEN_SECRET`                                               | 개발용 대체값 제공. 운영 시작 시 필수, 변경하면 기존 링크 무효     |
+| `NEXT_PUBLIC_SITE_URL`                                             | 기본 `http://localhost:3000`, 배포 시 실제 HTTPS 도메인            |
+| `NEXT_PUBLIC_API_BASE_URL`                                         | 기본 빈 문자열, REST API 분리 시 사용                              |
+| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | 둘 다 있어야 유료 카드에서 선택 로그인, 없으면 기존 곧 오픈 안내   |
+| `SUPABASE_SECRET_KEY`                                              | 서버 전용 프로필 저장 키, 없으면 내 정보 API 503                   |
 
 빌드는 키 없이 가능합니다. 운영 실행은 `SHARE_TOKEN_SECRET`을 설정한 다음
 `bun run build && bun run start`를 사용합니다.
@@ -70,7 +72,9 @@ http://localhost:3000 을 엽니다. `.env` 없이 모의 분석, 예시 대화,
 
 이미지는 `html-to-image`로 생성합니다. 파일 공유 지원 시 네이티브 공유,
 일반 브라우저는 다운로드, 카카오톡/인스타그램 내부 브라우저는 길게 눌러 저장하는
-이미지 모달을 제공합니다. 로그인, DB, 실제 결제는 없습니다.
+이미지 모달을 제공합니다. 유료 카드에서 카카오·구글 선택 로그인을 제공하며,
+서버는 사용자 ID·공급자·닉네임만 프로필 DB에 저장합니다. 분석·공유는 로그인 없이
+사용할 수 있고 대화·분석 결과는 저장하지 않습니다. 실제 결제는 없습니다.
 Pretendard Bold OTF와 SIL OFL 라이선스는 `assets/`에 포함되어 외부 폰트 요청이 없습니다.
 유형 16종과 배지 2종의 SVG는 Twemoji (CC BY 4.0, jdecked/twemoji)이며 `public/characters/`에
 라이선스와 함께 포함했습니다. 파일별 원본 이모지와 수정 내용(`role`, `aria-label` 추가)은
