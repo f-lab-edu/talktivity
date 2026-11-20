@@ -66,6 +66,7 @@ type EventProps = {
   readonly share_kakao_click: undefined;
   readonly share_link_copy: undefined;
   readonly image_save: { readonly method: string };
+  readonly paywall_teaser_view: { readonly tier: 1000 | 1900; readonly placement: "result" };
   readonly paywall_teaser_click: { readonly tier: 1000 | 1900 };
   readonly shared_page_view: TypeAnalyticsProps;
   readonly shared_page_cta_click: undefined;
@@ -94,6 +95,7 @@ const eventPropertyAllowlist = {
   share_kakao_click: [],
   share_link_copy: [],
   image_save: ["method"],
+  paywall_teaser_view: ["tier", "placement"],
   paywall_teaser_click: ["tier"],
   shared_page_view: ["typeCode", "badges", "direction", "length", "color", "stance"],
   shared_page_cta_click: [],

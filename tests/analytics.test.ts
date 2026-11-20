@@ -107,6 +107,35 @@ describe("typeAnalyticsProps", () => {
   });
 });
 
+describe("track", () => {
+  it("passes tier and placement for paywall_teaser_view", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_HOST", "");
+    vi.resetModules();
+
+    const captured: unknown[][] = [];
+    const debugSpy = vi.spyOn(console, "debug").mockImplementation((...args) => {
+      captured.push(args);
+    });
+
+    try {
+      const { track: freshTrack } = await import("../lib/analytics");
+      const props = { tier: 1900, placement: "result", variant: "extra" } as const;
+
+      freshTrack("paywall_teaser_view", props as { tier: 1900; placement: "result" });
+
+      expect(captured).toEqual([
+        ["[분석 이벤트]", "paywall_teaser_view", { tier: 1900, placement: "result" }],
+      ]);
+    } finally {
+      debugSpy.mockRestore();
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
+  });
+});
+
 describe("nextInternalFlag", () => {
   it.each([
     ["?internal=1", false, true],
