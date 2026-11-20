@@ -3,6 +3,7 @@ import { prepareConversation } from "@/lib/core/mask";
 import { speakersIn } from "@/lib/core/parse-kakao";
 import { requestSchema, resultSchema } from "@/lib/core/schema";
 import { sharePayloadFromResult, signToken } from "@/lib/core/share-token";
+import { analyzerConfig, systemPrompt } from "@/lib/server/ai-config";
 import { apiError, clientIp } from "@/lib/server/http";
 import { globalLlmLimit, rateLimit } from "@/lib/server/rate-limit";
 import { shareSecret } from "@/lib/server/share-secret";
@@ -43,13 +44,7 @@ export async function POST(request: Request) {
       relationship: parsed.data.relationship,
     };
     const result = resultSchema.parse(
-      await analyze(masked, {
-        provider: process.env.LLM_PROVIDER,
-        anthropicKey: process.env.ANTHROPIC_API_KEY,
-        openaiKey: process.env.OPENAI_API_KEY,
-        googleKey: process.env.GEMINI_API_KEY,
-        model: process.env.LLM_MODEL,
-      }),
+      await analyze(masked, analyzerConfig(), systemPrompt("ANALYZE_SYSTEM_PROMPT")),
     );
     const shareToken = await signToken(sharePayloadFromResult(result), secret);
     return Response.json({ result, shareToken }, { headers: { "Cache-Control": "no-store" } });

@@ -56,7 +56,7 @@ describe("분석기 모델 경로", () => {
   });
 
   it("프롬프트에 캐릭터 목록 없이 코드 힌트와 대화만 보낸다", () => {
-    const { system, prompt } = buildAnalysisPrompt(request, countHints([]));
+    const { system, prompt } = buildAnalysisPrompt(request, countHints([]), "test system");
     const { conversation, ...context } = JSON.parse(prompt);
     const sent = `${system}${JSON.stringify(context)}`;
     for (const [code, meta] of Object.entries(characters)) {
@@ -69,7 +69,7 @@ describe("분석기 모델 경로", () => {
 
   it("모델은 의미 축과 문구만 바꾸고 코드 소유 필드는 대화 속 지시에도 유지된다", async () => {
     reply(judgment);
-    const result = await analyze(request, config);
+    const result = await analyze(request, config, "test system");
     const fallback = mockAnalyze(request);
     expect(generate).toHaveBeenCalledTimes(1);
     expect(result).toEqual(
@@ -91,7 +91,7 @@ describe("분석기 모델 경로", () => {
     "not json",
   ])("잘못된 모델 출력은 한 번 재시도한 뒤 결정적 결과로 돌아간다", async (output) => {
     reply(output);
-    const result = await analyze(request, config);
+    const result = await analyze(request, config, "test system");
     expect(generate).toHaveBeenCalledTimes(2);
     expect(resultSchema.safeParse(result).success).toBe(true);
     expect(result).toEqual(mockAnalyze(request));
@@ -99,14 +99,19 @@ describe("분석기 모델 경로", () => {
 
   it("공급자 오류가 두 번 나면 결정적 결과를 반환한다", async () => {
     generate.mockRejectedValue(new Error(`provider echoed ${secretLine}`));
-    const result = await analyze(request, config);
+    const result = await analyze(request, config, "test system");
     expect(generate).toHaveBeenCalledTimes(2);
     expect(result).toEqual(mockAnalyze(request));
   });
 
   it("공급자 설정이 없으면 모델을 호출하지 않는다", async () => {
-    const result = await analyze(request, {});
+    const result = await analyze(request, {}, "test system");
     expect(generate).not.toHaveBeenCalled();
     expect(resultSchema.safeParse(result).success).toBe(true);
+  });
+
+  it("프롬프트가 없으면 키가 있어도 모델 호출 없이 모의 분석을 한다", async () => {
+    expect(await analyze(request, config, undefined)).toEqual(mockAnalyze(request));
+    expect(generate).not.toHaveBeenCalled();
   });
 });

@@ -131,7 +131,7 @@ describe("분석기", () => {
   it.each([{ provider: "mock" }, { provider: "anthropic" }, { provider: "openai" }, {}])(
     "키가 없으면 외부 요청 없이 모의 분석을 한다",
     async (config) => {
-      expect(await analyze(request, config)).toEqual(mockAnalyze(request));
+      expect(await analyze(request, config, "test system")).toEqual(mockAnalyze(request));
     },
   );
 });
@@ -150,7 +150,12 @@ describe("캡처 추출", () => {
     ).toBe(true);
   });
   it("키가 없으면 외부 요청 없이 나/상대 예시 대화를 돌려준다", async () => {
-    const outcome = await extractConversation([], { provider: "mock" });
+    const outcome = await extractConversation([], { provider: "mock" }, "test system");
     expect(outcome.ok && speakersIn(outcome.conversation)).toEqual(["나", "상대"]);
+  });
+  it("프롬프트가 없으면 키가 있어도 기존 키 없음 결과를 반환한다", async () => {
+    expect(
+      await extractConversation([], { provider: "openai", openaiKey: "test-key" }, undefined),
+    ).toEqual(await extractConversation([], {}, "test system"));
   });
 });

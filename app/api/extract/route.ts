@@ -1,4 +1,5 @@
 import { extractConversation, type ScreenshotImage } from "@/lib/core/extractor";
+import { analyzerConfig, systemPrompt } from "@/lib/server/ai-config";
 import { apiError, clientIp } from "@/lib/server/http";
 import { globalLlmLimit, rateLimit } from "@/lib/server/rate-limit";
 
@@ -33,13 +34,11 @@ export async function POST(request: Request) {
         mediaType: file.type,
       })),
     );
-    const outcome = await extractConversation(images, {
-      provider: process.env.LLM_PROVIDER,
-      anthropicKey: process.env.ANTHROPIC_API_KEY,
-      openaiKey: process.env.OPENAI_API_KEY,
-      googleKey: process.env.GEMINI_API_KEY,
-      model: process.env.LLM_MODEL,
-    });
+    const outcome = await extractConversation(
+      images,
+      analyzerConfig(),
+      systemPrompt("EXTRACT_SYSTEM_PROMPT"),
+    );
     if (outcome.ok)
       return Response.json(
         { conversation: outcome.conversation },

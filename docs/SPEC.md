@@ -51,6 +51,7 @@ All user-facing copy is Korean. Mobile-first: content column `max-w-[480px] mx-a
 | Env var | When missing |
 |---|---|
 | `LLM_PROVIDER` (`anthropic`/`openai`/`mock`), `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `LLM_MODEL` | Fall back to the deterministic mock analyzer (hash of input -> stable result) |
+| `ANALYZE_SYSTEM_PROMPT`, `EXTRACT_SYSTEM_PROMPT` | Server warns once per missing variable; analyzer returns the deterministic mock, extractor returns the existing example conversation, exactly like missing provider keys. Core receives prompts as arguments and never reads env. |
 | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | In-memory per-instance limiter (dev only; log a warning once) |
 | `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST` | Analytics wrapper becomes a no-op (console.debug in dev) |
 | `NEXT_PUBLIC_KAKAO_JS_KEY` | Kakao button falls back to Web Share API, then copy-link |
