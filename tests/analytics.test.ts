@@ -129,7 +129,7 @@ describe("track", () => {
       Reflect.apply(freshTrack, undefined, [
         "login_dialog_view",
         {
-          tier: 1900,
+          tier: 4900,
           id: "private-id",
           nickname: "private-name",
         },
@@ -144,7 +144,7 @@ describe("track", () => {
       expect(debug.mock.calls).toEqual([
         ["[분석 이벤트]", "login_start", { provider: "kakao" }],
         ["[분석 이벤트]", "login_success", { provider: "kakao" }],
-        ["[분석 이벤트]", "login_dialog_view", { tier: 1900 }],
+        ["[분석 이벤트]", "login_dialog_view", { tier: 4900 }],
         ["[분석 이벤트]", "logout", {}],
       ]);
     } finally {
@@ -176,6 +176,42 @@ describe("track", () => {
       ]);
     } finally {
       debugSpy.mockRestore();
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
+  });
+});
+
+describe("track 결제·리포트 이벤트", () => {
+  it("허용된 속성만 전송한다", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_HOST", "");
+    vi.resetModules();
+    const debug = vi.spyOn(console, "debug").mockImplementation(() => {});
+    try {
+      const { track: freshTrack } = await import("../lib/analytics");
+      const leaked = { id: "private-id", conversation: "private" };
+      Reflect.apply(freshTrack, undefined, ["coupon_redeem_success", { credited: 5, ...leaked }]);
+      Reflect.apply(freshTrack, undefined, [
+        "coupon_redeem_error",
+        { code: "COUPON_EXPIRED", ...leaked },
+      ]);
+      Reflect.apply(freshTrack, undefined, [
+        "report_generate_error",
+        { code: "INSUFFICIENT_CREDITS", ...leaked },
+      ]);
+      Reflect.apply(freshTrack, undefined, ["report_view", { source: "list", ...leaked }]);
+      Reflect.apply(freshTrack, undefined, ["checkout_start", leaked]);
+      expect(debug.mock.calls).toEqual([
+        ["[분석 이벤트]", "coupon_redeem_success", { credited: 5 }],
+        ["[분석 이벤트]", "coupon_redeem_error", { code: "COUPON_EXPIRED" }],
+        ["[분석 이벤트]", "report_generate_error", { code: "INSUFFICIENT_CREDITS" }],
+        ["[분석 이벤트]", "report_view", { source: "list" }],
+        ["[분석 이벤트]", "checkout_start", {}],
+      ]);
+    } finally {
+      debug.mockRestore();
       vi.unstubAllEnvs();
       vi.resetModules();
     }

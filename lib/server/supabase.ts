@@ -1,7 +1,7 @@
 import "server-only";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { AuthUser } from "@/lib/core/auth";
-import type { PaidReport } from "@/lib/core/billing/report";
+import type { PaidReport } from "@/lib/core/billing/paid-report";
 
 type ProfileWrite = AuthUser & { readonly updated_at: string };
 type ReportRow = {

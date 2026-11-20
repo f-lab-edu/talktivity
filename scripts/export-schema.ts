@@ -9,7 +9,7 @@ import {
   reportsListResponseSchema,
 } from "../lib/core/billing/contracts";
 import { couponRedeemRequestSchema, couponRedeemResponseSchema } from "../lib/core/billing/coupon";
-import { paidReportSchema } from "../lib/core/billing/report";
+import { paidReportSchema } from "../lib/core/billing/paid-report";
 import { errorSchema, requestSchema, responseSchema, resultSchema } from "../lib/core/schema";
 import { sharePayloadV2Schema } from "../lib/core/share-token";
 

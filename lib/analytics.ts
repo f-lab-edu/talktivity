@@ -66,12 +66,22 @@ type EventProps = {
   readonly share_kakao_click: undefined;
   readonly share_link_copy: undefined;
   readonly image_save: { readonly method: string };
-  readonly paywall_teaser_view: { readonly tier: 1000 | 1900; readonly placement: "result" };
-  readonly paywall_teaser_click: { readonly tier: 1000 | 1900 };
-  readonly login_dialog_view: { readonly tier: 1000 | 1900 };
+  // `tier` is the product price in won (4900 for the fallback card).
+  readonly paywall_teaser_view: { readonly tier: number; readonly placement: "result" };
+  readonly paywall_teaser_click: { readonly tier: number };
+  readonly login_dialog_view: { readonly tier: number };
   readonly login_start: { readonly provider: "kakao" | "google" };
   readonly login_success: { readonly provider: "kakao" | "google" };
   readonly logout: undefined;
+  readonly checkout_start: undefined;
+  readonly checkout_close: undefined;
+  readonly checkout_complete: undefined;
+  readonly coupon_redeem_success: { readonly credited: number };
+  readonly coupon_redeem_error: { readonly code: string };
+  readonly report_generate_start: undefined;
+  readonly report_generate_success: undefined;
+  readonly report_generate_error: { readonly code: string };
+  readonly report_view: { readonly source: "inline" | "list" };
   readonly shared_page_view: TypeAnalyticsProps;
   readonly shared_page_cta_click: undefined;
 };
@@ -105,6 +115,15 @@ const eventPropertyAllowlist = {
   login_start: ["provider"],
   login_success: ["provider"],
   logout: [],
+  checkout_start: [],
+  checkout_close: [],
+  checkout_complete: [],
+  coupon_redeem_success: ["credited"],
+  coupon_redeem_error: ["code"],
+  report_generate_start: [],
+  report_generate_success: [],
+  report_generate_error: ["code"],
+  report_view: ["source"],
   shared_page_view: ["typeCode", "badges", "direction", "length", "color", "stance"],
   shared_page_cta_click: [],
 } as const satisfies EventPropertyAllowlist;
@@ -174,6 +193,11 @@ const client =
         return posthog;
       })
     : null;
+
+// Checkout carries this id so the server-side payment event joins the same PostHog person.
+export async function analyticsDistinctId(): Promise<string | undefined> {
+  return client ? (await client).get_distinct_id() : undefined;
+}
 
 export function track<E extends EventWithoutProps>(event: E): void;
 export function track<E extends EventWithProps, P extends EventProps[E]>(

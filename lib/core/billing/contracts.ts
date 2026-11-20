@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { priceIdSchema, transactionIdSchema } from "./catalog";
-import { paidReportSchema } from "./report";
+import { paidReportSchema } from "./paid-report";
 
 export const minorAmountSchema = z
   .string()

@@ -98,31 +98,30 @@
   letter-spacing: -0.5px;
 }
 .teaser-card {
-  display: flex;
-  align-items: center;
-  text-align: left;
-  gap: 12px;
-  width: 100%;
+  display: grid;
+  gap: 14px;
   background: #f0f0e9;
   border: 1px solid var(--line);
   border-radius: 16px;
-  padding: 18px 14px;
+  padding: 18px 14px 14px;
   margin-top: 12px;
   font-size: 12px;
 }
-.teaser-card svg {
+.teaser-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.teaser-head svg {
   flex-shrink: 0;
   color: #737d64;
 }
-.teaser-card span {
+.teaser-head span {
   flex: 1;
 }
-.teaser-card strong {
+.teaser-head strong {
   white-space: nowrap;
   font-size: 12px;
-}
-.teaser-card:hover {
-  background: #e9eddf;
 }
 .restart {
   margin-top: 22px;

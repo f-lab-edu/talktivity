@@ -1,10 +1,6 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import {
-  buildReportPrompt,
-  generatePaidReport,
-  mockPaidReport,
-  paidReportSchema,
-} from "../lib/core/billing/report";
+import { paidReportSchema } from "../lib/core/billing/paid-report";
+import { buildReportPrompt, generatePaidReport, mockPaidReport } from "../lib/core/billing/report";
 
 const generate = vi.hoisted(() => vi.fn<() => Promise<{ readonly output: unknown }>>());
 vi.mock("ai", async (importOriginal) => ({

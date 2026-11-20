@@ -35,14 +35,14 @@ function browserClient() {
   return client;
 }
 
-export async function signIn(provider: AuthUser["provider"]): Promise<void> {
+export async function signIn(provider: AuthUser["provider"], returnPath = "/"): Promise<void> {
   const supabase = browserClient();
   if (!supabase) throw new Error("로그인 서비스를 준비 중이에요.");
   track("login_start", { provider });
   const { error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `${window.location.origin}/`,
+      redirectTo: `${window.location.origin}${returnPath}`,
       // `scopes` appends to provider defaults. Singular `scope` replaces them. Google keeps its
       // default email scope: Supabase rejects an emailless sign-in unless the provider is
       // configured as email-optional, which the dashboard documents only for Kakao.

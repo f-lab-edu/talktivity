@@ -1,7 +1,7 @@
 import "server-only";
 import { z } from "zod";
 import { storedReportSchema } from "@/lib/core/billing/contracts";
-import type { PaidReport } from "@/lib/core/billing/report";
+import type { PaidReport } from "@/lib/core/billing/paid-report";
 import { supabaseAdmin } from "@/lib/server/supabase";
 
 const failureCodeSchema = z.enum([

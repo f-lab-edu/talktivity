@@ -10,6 +10,7 @@ import { maskPII } from "@/lib/core/mask";
 import { type AnalysisRequest, errorSchema, responseSchema } from "@/lib/core/schema";
 import { clearDraft } from "@/lib/draft";
 import { flowReducer } from "@/lib/flow";
+import { clearLastRequest, saveLastRequest } from "@/lib/last-request";
 
 export default function Home() {
   const [state, dispatch] = useReducer(flowReducer, { step: "landing" });
@@ -85,6 +86,9 @@ export default function Home() {
         clearDraft();
       }
       dispatch({ type: "result", data });
+      // The paid report needs the masked request that produced this result; the example has none.
+      if (body) saveLastRequest(body);
+      else clearLastRequest();
       try {
         sessionStorage.setItem("talktivity:last-result", JSON.stringify(data));
       } catch (error) {
@@ -133,6 +137,7 @@ export default function Home() {
             } catch (error) {
               if (!(error instanceof Error)) throw error;
             }
+            clearLastRequest();
             dispatch({ type: "input" });
           }}
         />

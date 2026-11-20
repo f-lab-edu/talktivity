@@ -1,0 +1,116 @@
+.account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.paywall-account {
+  flex-wrap: wrap;
+}
+.purchase-timeout {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 13px;
+  text-align: center;
+}
+.text-field {
+  width: 100%;
+  min-height: 52px;
+  padding: 12px 16px;
+  border: 1px solid #ccd0c2;
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--foreground);
+  font: inherit;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.text-field:focus-visible {
+  outline: 3px solid #4d6d12;
+  outline-offset: 2px;
+}
+.coupon-form {
+  display: grid;
+  gap: 4px;
+  margin-top: 16px;
+}
+.coupon-form label {
+  margin-bottom: 4px;
+}
+.coupon-form .button {
+  margin-top: 12px;
+}
+.paid-report {
+  margin-top: 32px;
+  padding: 24px 20px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface);
+}
+.paid-report h2 {
+  font-size: 21px;
+  line-height: 1.5;
+  letter-spacing: -0.7px;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.paid-report section {
+  margin-top: 28px;
+}
+.paid-report h3 {
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+.paid-report h4 {
+  margin: 20px 0 8px;
+  font-size: 14px;
+  font-family: var(--font-pretendard), Arial, sans-serif;
+}
+.paid-report p,
+.paid-report li {
+  font-size: 14px;
+  line-height: 1.8;
+  color: #565c50;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.paid-report ol,
+.paid-report ul {
+  margin: 0;
+  padding-left: 20px;
+}
+.paid-report .report-replies {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  list-style: none;
+}
+.report-replies li {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  padding: 16px;
+  border-radius: 14px;
+  background: #eef0e6;
+}
+.report-replies blockquote {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--foreground);
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.copy-button {
+  min-height: 44px;
+  min-width: 96px;
+  padding: 8px 14px;
+  font-size: 13px;
+}
+.paid-report li + li {
+  margin-top: 6px;
+}
+.report-replies li + li {
+  margin-top: 0;
+}
