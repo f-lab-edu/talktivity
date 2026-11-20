@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { axisBucket, redactShareTokens, track, typeAnalyticsProps } from "../lib/analytics";
+import {
+  axisBucket,
+  nextInternalFlag,
+  redactShareTokens,
+  track,
+  typeAnalyticsProps,
+} from "../lib/analytics";
 import type { AxisScores, BadgeId, TypeCode } from "../lib/core/classification";
 
 describe("axisBucket", () => {
@@ -98,6 +104,22 @@ describe("typeAnalyticsProps", () => {
       vi.unstubAllEnvs();
       vi.resetModules();
     }
+  });
+});
+
+describe("nextInternalFlag", () => {
+  it.each([
+    ["?internal=1", false, true],
+    ["?internal=1", true, true],
+    ["?internal=0", true, false],
+    ["?internal=0", false, false],
+    ["", true, true],
+    ["", false, false],
+    ["?utm=kakao&ref=1", true, true],
+    ["?utm=kakao&ref=1", false, false],
+    ["?internal=yes", true, true],
+  ] as const)("search %j with stored %s gives %s", (search, stored, expected) => {
+    expect(nextInternalFlag(search, stored)).toBe(expected);
   });
 });
 

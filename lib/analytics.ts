@@ -122,6 +122,30 @@ export function redactShareTokens<
   return event;
 }
 
+const internalStorageKey = "talktivity:internal";
+
+// `?internal=1` marks this device as internal, `?internal=0` clears it, anything else keeps the stored state.
+export function nextInternalFlag(search: string, stored: boolean): boolean {
+  const requested = new URLSearchParams(search).get("internal");
+  if (requested === "1") return true;
+  if (requested === "0") return false;
+  return stored;
+}
+
+function resolveInternalTraffic(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const stored = window.localStorage.getItem(internalStorageKey) === "1";
+    const next = nextInternalFlag(window.location.search, stored);
+    if (next !== stored) window.localStorage.setItem(internalStorageKey, next ? "1" : "0");
+    return next;
+  } catch (error) {
+    // Safari private mode and blocked storage throw a DOMException; treat the device as external.
+    if (error instanceof DOMException) return false;
+    throw error;
+  }
+}
+
 const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 const host = process.env.NEXT_PUBLIC_POSTHOG_HOST;
 const client =
@@ -136,6 +160,7 @@ const client =
           persistence: "memory",
           before_send: redactShareTokens,
         });
+        if (resolveInternalTraffic()) posthog.register({ internal: true });
         return posthog;
       })
     : null;
