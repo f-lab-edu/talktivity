@@ -1,0 +1,18 @@
+{
+  "publicJwk": {
+    "crv": "P-256",
+    "kty": "EC",
+    "x": "22FJ0DTmKhT8K1Wa_0_kDtqlOfH0ylGc-ZjS1baeIHE",
+    "y": "MUFJZ2AvdhK3IzDMtdM8JBUQ2YIgMPcEJgR5_VqvFFg",
+    "kid": "golden-es256",
+    "alg": "ES256"
+  },
+  "issuer": "https://example.supabase.co/auth/v1",
+  "audience": "authenticated",
+  "token": "eyJhbGciOiJFUzI1NiIsImtpZCI6ImdvbGRlbi1lczI1NiJ9.eyJzdWIiOiIxMjNlNDU2Ny1lODliLTQyZDMtYTQ1Ni00MjY2MTQxNzQwMDAiLCJpc3MiOiJodHRwczovL2V4YW1wbGUuc3VwYWJhc2UuY28vYXV0aC92MSIsImF1ZCI6ImF1dGhlbnRpY2F0ZWQiLCJpYXQiOjE3OTUxMzI4MDAsImV4cCI6NDEwMjQ0NDgwMCwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZ29vZ2xlIn0sInVzZXJfbWV0YWRhdGEiOnsiZnVsbF9uYW1lIjoiICDqs6jrk6Ag7Lmc6rWsICAifX0.MhVze0fOWOc_F_mzGMfSIe8-fGUFCCP0fRD-exfgnj5ox__Gp7jFc3SG_2AohxzAVvnQWbLDrzy8lw8vfyAyaA",
+  "expected": {
+    "id": "123e4567-e89b-42d3-a456-426614174000",
+    "provider": "google",
+    "nickname": "골든 친구"
+  }
+}

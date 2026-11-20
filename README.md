@@ -55,6 +55,10 @@ http://localhost:3000 을 엽니다. `.env` 없이 모의 분석, 예시 대화,
 `typecheck`: 엄격한 TypeScript 검사. `lint`, `format`: Biome 검사/수정.
 `test`: Vitest 전체 단발 실행. `export-schema`: Zod v4에서 `contracts/` JSON Schema 재생성.
 `tests/golden/share-token-v2.json`은 독립 Node HMAC로 계산한 다른 언어용 고정 벡터입니다.
+`tests/golden/auth-token-es256.json`은 ES256 공개 JWK·JWT·issuer·audience·기대 프로필을
+담은 인증 검증 벡터입니다(만료 2100-01-01). 개인 키는 포함하지 않습니다.
+닉네임은 `name`, `full_name`, `nickname`, `preferred_username`, `user_name` 순으로
+첫 비어 있지 않은 문자열을 골라 공백 제거 후 최대 80자로 제한하며, 없으면 `null`입니다.
 변경 후 검증은 `bun run typecheck`, `bun run lint`, `bun run test`, `bun run build` 순서로 돌립니다.
 스키마를 바꿨다면 `bun run export-schema`로 `contracts/`를 다시 만듭니다.
 `lib/core/`에는 Next/React 의존성이 없습니다.
