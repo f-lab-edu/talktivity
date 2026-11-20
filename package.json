@@ -10,6 +10,7 @@
     "format": "biome check --write .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:db": "bun run scripts/test-db.ts",
     "export-schema": "bun run scripts/export-schema.ts"
   },
   "dependencies": {
