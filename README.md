@@ -67,8 +67,8 @@ http://localhost:3000 을 엽니다. `.env` 없이 모의 분석, 예시 대화,
 
 Supabase 프로젝트를 만든 후 Auth에서 ES256 서명 키와 Kakao·Google 공급자를 켜세요.
 Site URL과 Redirect URLs에 운영 도메인의 `/`와 `http://localhost:3000/`를 등록합니다.
-두 공급자 모두 **Allow users without an email**을 켜고 이메일 수집과 계정 연결을
-사용하지 않습니다. `supabase/migrations/0001_profiles.sql`을 적용하고 서버에
+Kakao 공급자는 **Allow users without an email**을 켭니다. 서비스 DB(`profiles`)에는
+이메일을 저장하지 않고 계정 연결도 사용하지 않습니다. `supabase/migrations/0001_profiles.sql`을 적용하고 서버에
 `SUPABASE_SECRET_KEY`를 설정하세요. 브라우저는 공개 키만 사용하고 DB를 조회하지 않습니다.
 
 Kakao Developers에서 카카오 로그인을 켜고 닉네임 동의 항목만 사용하세요.
@@ -78,12 +78,12 @@ Google Cloud 웹 OAuth 클라이언트도 같은 Supabase 콜백을 등록합니
 
 Supabase Auth 기본 Kakao scope는 `account_email,profile_image,profile_nickname`,
 Google은 `email,profile`입니다. `options.scopes`는 기본값에 추가하므로 사용하지 않고,
-`options.queryParams.scope`로 Kakao는 `profile_nickname`, Google은 `openid profile`만
-요청합니다. Kakao의 `account_email` 동의 항목이나 비즈 앱 전환은 필요하지 않습니다.
+`options.queryParams.scope`로 Kakao는 `profile_nickname`만 요청합니다. Google은 기본 scope를
+유지합니다. Supabase Auth는 이메일 없는 로그인을 email optional 공급자에서만 허용하는데, 이 설정은
+Kakao 가이드에만 문서화돼 있습니다(이메일은 Supabase `auth.users`에만 남습니다). Kakao의 `account_email` 동의 항목이나 비즈 앱 전환은 필요하지 않습니다.
 근거는 Supabase의 Kakao 공식 가이드와 Auth 소스의 `provider/kakao.go`,
 `provider/google.go`, `external.go`, `custom_oauth_admin.go`입니다.
 실제 프로젝트를 설정한 뒤 동의 화면의 scope와 이메일 없는 로그인 허용을 확인하세요.
-이메일을 제공하지 않으므로 이메일 기반 자동 계정 연결도 발생하지 않습니다.
 이미 연결된 기존 Supabase 계정을 분리하는 기능은 제공하지 않습니다.
 
 로그인은 결과 화면 유료 카드에서만 시작합니다. 세션은 브라우저 localStorage의 PKCE

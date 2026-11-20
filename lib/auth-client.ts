@@ -43,8 +43,10 @@ export async function signIn(provider: AuthUser["provider"]): Promise<void> {
     provider,
     options: {
       redirectTo: `${window.location.origin}/`,
-      // `scopes` appends to provider defaults. Singular `scope` replaces them.
-      queryParams: { scope: provider === "kakao" ? "profile_nickname" : "openid profile" },
+      // `scopes` appends to provider defaults. Singular `scope` replaces them. Google keeps its
+      // default email scope: Supabase rejects an emailless sign-in unless the provider is
+      // configured as email-optional, which the dashboard documents only for Kakao.
+      ...(provider === "kakao" ? { queryParams: { scope: "profile_nickname" } } : {}),
     },
   });
   if (error) throw error;

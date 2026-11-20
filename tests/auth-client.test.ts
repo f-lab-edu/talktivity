@@ -72,8 +72,8 @@ describe("브라우저 인증 REST 경계", () => {
 
   it.each([
     ["kakao", "profile_nickname"],
-    ["google", "openid profile"],
-  ] as const)("%s는 이메일 scope 없이 PKCE로 루트에 복귀한다", async (provider, scope) => {
+    ["google", null],
+  ] as const)("%s는 정해진 scope로 PKCE 로그인 후 루트에 복귀한다", async (provider, scope) => {
     const { signIn } = await import("../lib/auth-client");
     await signIn(provider);
     const redirect = new URL(assign.mock.calls[0]?.[0]);
