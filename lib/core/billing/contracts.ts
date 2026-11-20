@@ -2,7 +2,33 @@ import { z } from "zod";
 import { priceIdSchema, transactionIdSchema } from "./catalog";
 import { paidReportSchema } from "./report";
 
-export const creditsResponseSchema = z.object({ balance: z.number().int() }).strict();
+export const minorAmountSchema = z
+  .string()
+  .regex(/^\d+$/)
+  .transform(Number)
+  .pipe(z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER));
+export const currencySchema = z.string().regex(/^[A-Z]{3}$/);
+export const creditsResponseSchema = z
+  .object({
+    balance: z.number().int(),
+    products: z.array(
+      z
+        .object({
+          priceId: priceIdSchema,
+          name: z.string(),
+          credits: z.number().int().positive(),
+          amount: z
+            .number()
+            .int()
+            .nonnegative()
+            .max(Number.MAX_SAFE_INTEGER)
+            .describe("Integer in the currency's minor unit (KRW: won, USD: cents)."),
+          currency: currencySchema,
+        })
+        .strict(),
+    ),
+  })
+  .strict();
 export const checkoutRequestSchema = z
   .object({
     priceId: priceIdSchema,

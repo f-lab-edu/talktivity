@@ -1,5 +1,6 @@
 import { verifyPaddleSignature } from "@/lib/core/billing/paddle-signature";
 import { decideWebhook, webhookEnvelopeSchema } from "@/lib/core/billing/webhook";
+import { captureBillingEvent } from "@/lib/server/billing-analytics";
 import { billingError, billingFailure, billingJson } from "@/lib/server/billing-http";
 import { billingCatalog, grantCredits, revokePurchase } from "@/lib/server/billing-store";
 
@@ -22,12 +23,28 @@ export async function POST(request: Request) {
       parsed.data.event_type === "transaction.completed" ? await billingCatalog() : [],
     );
     switch (decision.kind) {
-      case "grant":
-        await grantCredits(decision);
+      case "grant": {
+        const applied = await grantCredits(decision);
+        if (applied && decision.analytics)
+          await captureBillingEvent(decision.analytics.posthogId, {
+            event: "payment_success",
+            properties: {
+              credits: decision.credits,
+              amount: decision.analytics.amount,
+              currency: decision.analytics.currency,
+            },
+          });
         break;
-      case "revoke":
-        await revokePurchase(decision.transactionId, decision.ref);
+      }
+      case "revoke": {
+        const result = await revokePurchase(decision.transactionId, decision.ref);
+        if (result.applied && decision.posthogId)
+          await captureBillingEvent(decision.posthogId, {
+            event: "refund_processed",
+            properties: { credits: result.credits },
+          });
         break;
+      }
       case "ignore":
         break;
       default: {

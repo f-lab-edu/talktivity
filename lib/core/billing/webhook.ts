@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { adjustmentIdSchema, type Catalog, priceIdSchema, transactionIdSchema } from "./catalog";
+import { currencySchema, minorAmountSchema } from "./contracts";
 
 export const webhookEnvelopeSchema = z.object({ event_type: z.string(), data: z.unknown() });
 const completedSchema = z.object({
@@ -16,14 +17,31 @@ const adjustmentSchema = z.object({
   status: z.literal("approved"),
   transaction_id: transactionIdSchema,
 });
+const identitySchema = z.object({
+  custom_data: z.object({ posthogId: z.string().min(1).max(200) }),
+});
+const paymentSchema = identitySchema.extend({
+  currency_code: currencySchema,
+  details: z.object({ totals: z.object({ total: minorAmountSchema }) }),
+});
 export type WebhookDecision =
   | {
       readonly kind: "grant";
       readonly userId: string;
       readonly credits: number;
       readonly ref: string;
+      readonly analytics?: {
+        readonly posthogId: string;
+        readonly amount: number;
+        readonly currency: string;
+      };
     }
-  | { readonly kind: "revoke"; readonly transactionId: string; readonly ref: string }
+  | {
+      readonly kind: "revoke";
+      readonly transactionId: string;
+      readonly ref: string;
+      readonly posthogId?: string;
+    }
   | { readonly kind: "ignore" };
 
 export function decideWebhook(
@@ -43,18 +61,34 @@ export function decideWebhook(
       );
       if (!Number.isSafeInteger(credits) || credits < 1 || credits > 2147483647)
         return { kind: "ignore" };
+      const payment = paymentSchema.safeParse(event.data);
       return {
         kind: "grant",
         userId: parsed.data.custom_data.userId,
         credits,
         ref: parsed.data.id,
+        ...(payment.success
+          ? {
+              analytics: {
+                posthogId: payment.data.custom_data.posthogId,
+                amount: payment.data.details.totals.total,
+                currency: payment.data.currency_code,
+              },
+            }
+          : {}),
       };
     }
     case "adjustment.created":
     case "adjustment.updated": {
       const parsed = adjustmentSchema.safeParse(event.data);
+      const identity = identitySchema.safeParse(event.data);
       return parsed.success
-        ? { kind: "revoke", transactionId: parsed.data.transaction_id, ref: parsed.data.id }
+        ? {
+            kind: "revoke",
+            transactionId: parsed.data.transaction_id,
+            ref: parsed.data.id,
+            ...(identity.success ? { posthogId: identity.data.custom_data.posthogId } : {}),
+          }
         : { kind: "ignore" };
     }
     default:

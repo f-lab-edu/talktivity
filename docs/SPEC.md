@@ -64,6 +64,22 @@ All user-facing copy is Korean. Mobile-first: content column `max-w-[480px] mx-a
 | `SUPABASE_SECRET_KEY` | Profile API returns 503; analysis and sharing remain available |
 | `REPORT_SYSTEM_PROMPT` | Warn once and generate the deterministic paid report mock, like a missing LLM provider key |
 | `PADDLE_ENV` (`sandbox`/`production`), `PADDLE_API_KEY`, `PADDLE_WEBHOOK_SECRET` | Checkout returns 503 `BILLING_DISABLED`; credits, coupons and reports remain available. Webhooks require their secret, otherwise return 503. Products and credit quantities are stored in the server-only `products` table. |
+| `BILLING_TEST_USER_IDS` | Comma-separated UUID allowlist for sandbox purchasing; defaults to no users. Production has no user restriction. |
+
+`GET /api/credits` returns `{ balance, products: [{ priceId, name, credits, amount, currency }] }`.
+Only active products are listed, ordered by `sort`, then `price_id`. Paddle prices are cached per
+instance and price for ten minutes. `amount` is an integer in the currency's minor unit (KRW: won,
+USD: cents). Missing Paddle configuration or a sandbox user outside the allowlist yields `products: []`;
+an unavailable price is omitted without failing the balance response.
+`POST /api/billing/checkout` accepts `{ priceId, posthogId? }` (`posthogId` at most 200 characters).
+An unknown or inactive product returns 400 `PRODUCT_NOT_FOUND`; a sandbox non-tester receives
+403 `BILLING_UNAVAILABLE`.
+
+Newly applied purchases capture `payment_success { credits, amount, currency }`, using the completed
+transaction's total in minor units. Newly applied refunds capture `refund_processed { credits }`.
+Both use `custom_data.posthogId` as the distinct ID and existing PostHog key/host configuration.
+Refund events without their own `custom_data.posthogId` skip capture; no extra Paddle lookup is made.
+Capture has a three-second timeout, never changes webhook acknowledgments, and is not retried on replay.
 
 Provide `.env.example` documenting all of them. Default models: pick the current cheap tier
 for each provider (Anthropic Haiku-class, OpenAI mini-class) and allow override via `LLM_MODEL`.

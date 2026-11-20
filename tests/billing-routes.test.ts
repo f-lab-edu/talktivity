@@ -33,6 +33,7 @@ describe("인증과 크레딧", () => {
     expect(wire.requests).toHaveLength(0);
   });
   it("서버 키로 검증된 사용자의 음수 잔액도 반환한다", async () => {
+    vi.stubEnv("PADDLE_API_KEY", "");
     wire.respond = async (request) => {
       expect(request.url).toContain("/rpc/credit_balance");
       expect(request.headers.get("Authorization")).toBe(`Bearer ${secret}`);
@@ -41,10 +42,14 @@ describe("인증과 크레딧", () => {
     };
     const { GET } = await import("../app/api/credits/route");
     const response = await GET(authenticatedRequest("/api/credits"));
-    expect(creditsResponseSchema.parse(await response.json())).toEqual({ balance: -2 });
+    expect(creditsResponseSchema.parse(await response.json())).toEqual({
+      balance: -2,
+      products: [],
+    });
     expect(response.headers.get("Cache-Control")).toBe("no-store");
   });
   it("DB 내부 오류를 공개하지 않는다", async () => {
+    vi.stubEnv("PADDLE_API_KEY", "");
     wire.respond = () => databaseError("private secret", "42501");
     const { GET } = await import("../app/api/credits/route");
     const response = await GET(authenticatedRequest("/api/credits"));
@@ -94,8 +99,8 @@ describe("결제 생성", () => {
       expect(wire.requests).toHaveLength(0);
     },
   );
-  it.each([{ userId: "forged" }, { posthogId: "x".repeat(201) }])(
-    "사용자 지정 상품·사용자 주입은 거절한다",
+  it.each([{}, { priceId, userId: "forged" }, { priceId, posthogId: "x".repeat(201) }])(
+    "잘못된 요청과 사용자 주입은 거절한다",
     async (body) => {
       const { POST } = await import("../app/api/billing/checkout/route");
       expect((await POST(authenticatedRequest("/api/billing/checkout", body))).status).toBe(400);

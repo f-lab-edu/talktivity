@@ -79,7 +79,7 @@ describe("Paddle webhook 라우트", () => {
       if (url.pathname.endsWith("/credit_ledger")) {
         expect(url.searchParams.get("reason")).toBe("eq.purchase");
         expect(url.searchParams.get("ref")).toBe(`eq.${transactionId}`);
-        return Response.json([{ user_id: userId }]);
+        return Response.json([{ user_id: userId, delta: 10 }]);
       }
       expect(url.pathname).toBe("/rest/v1/rpc/revoke_purchase");
       expect(await request.json()).toEqual({

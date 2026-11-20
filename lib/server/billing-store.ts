@@ -118,20 +118,23 @@ export async function listReports(userId: string) {
     .parse(data)
     .map((row) => ({ id: row.id, headline: row.headline, createdAt: row.created_at }));
 }
-export async function revokePurchase(transactionId: string, ref: string): Promise<boolean> {
+export async function revokePurchase(transactionId: string, ref: string) {
   const purchase = await supabaseAdmin()
     .from("credit_ledger")
-    .select("user_id")
+    .select("user_id, delta")
     .eq("reason", "purchase")
     .eq("ref", transactionId)
     .maybeSingle();
   if (purchase.error) throw storeError(purchase.error);
   if (!purchase.data) throw new BillingStoreError("PURCHASE_NOT_FOUND");
+  const row = z
+    .object({ user_id: z.uuid(), delta: z.number().int().positive() })
+    .parse(purchase.data);
   const { data, error } = await supabaseAdmin().rpc("revoke_purchase", {
-    p_user: purchase.data.user_id,
+    p_user: row.user_id,
     p_transaction: transactionId,
     p_ref: ref,
   });
   if (error) throw storeError(error);
-  return z.boolean().parse(data);
+  return { applied: z.boolean().parse(data), credits: row.delta };
 }

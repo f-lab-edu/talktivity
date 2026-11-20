@@ -37,6 +37,8 @@ export function billingFailure(error: unknown): Response {
   }
   if (error instanceof PaddleError) {
     switch (error.code) {
+      case "BILLING_UNAVAILABLE":
+        return billingError(error.code, "현재 이 계정에서는 결제를 이용할 수 없어요.", 403);
       case "PRODUCT_NOT_FOUND":
         return billingError(error.code, "구매 가능한 상품을 찾을 수 없어요.", 400);
       case "BILLING_DISABLED":
