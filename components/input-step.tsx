@@ -17,7 +17,7 @@ export function InputStep({
   onBack,
   apiError,
 }: {
-  readonly onSubmit: (request: AnalysisRequest) => void;
+  readonly onSubmit: (request: AnalysisRequest, source: "text" | "screenshot") => void;
   readonly onBack: () => void;
   readonly apiError: string | null;
 }) {
@@ -92,7 +92,7 @@ export function InputStep({
       return;
     }
     setError(null);
-    onSubmit(parsed.data);
+    onSubmit(parsed.data, source === "screenshot" ? "screenshot" : "text");
   }
 
   return (

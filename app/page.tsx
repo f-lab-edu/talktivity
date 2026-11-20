@@ -40,12 +40,12 @@ export default function Home() {
       if (!(error instanceof Error)) throw error;
     }
   }, [state.step]);
-  async function run(request?: AnalysisRequest) {
+  async function run(request?: AnalysisRequest, source: "text" | "screenshot" = "text") {
     if (activeRequest.current) return;
     const controller = new AbortController();
     activeRequest.current = controller;
     dispatch({ type: "loading" });
-    if (request) track("analyze_submit");
+    if (request) track("analyze_submit", { source });
     try {
       const body = request
         ? {
@@ -116,7 +116,7 @@ export default function Home() {
     case "input":
       return (
         <InputStep
-          onSubmit={(request) => void run(request)}
+          onSubmit={(request, source) => void run(request, source)}
           onBack={() => dispatch({ type: "landing" })}
           apiError={state.error}
         />

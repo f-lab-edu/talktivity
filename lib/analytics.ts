@@ -59,7 +59,7 @@ type EventProps = {
   readonly extract_submit: { readonly count: number };
   readonly extract_success: undefined;
   readonly extract_error: { readonly code: string };
-  readonly analyze_submit: undefined;
+  readonly analyze_submit: { readonly source: "text" | "screenshot" };
   readonly analyze_success: undefined;
   readonly analyze_error: { readonly code: string };
   readonly result_view: TypeAnalyticsProps;
@@ -88,7 +88,7 @@ const eventPropertyAllowlist = {
   extract_submit: ["count"],
   extract_success: [],
   extract_error: ["code"],
-  analyze_submit: [],
+  analyze_submit: ["source"],
   analyze_success: [],
   analyze_error: ["code"],
   result_view: ["typeCode", "badges", "direction", "length", "color", "stance"],

@@ -136,6 +136,33 @@ describe("track", () => {
   });
 });
 
+describe("track analyze_submit", () => {
+  it.each(["text", "screenshot"] as const)("passes only source %s", async (source) => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_HOST", "");
+    vi.resetModules();
+
+    const captured: unknown[][] = [];
+    const debugSpy = vi.spyOn(console, "debug").mockImplementation((...args) => {
+      captured.push(args);
+    });
+
+    try {
+      const { track: freshTrack } = await import("../lib/analytics");
+      const props = { source, conversation: "private" } as { source: typeof source };
+
+      freshTrack("analyze_submit", props);
+
+      expect(captured).toEqual([["[분석 이벤트]", "analyze_submit", { source }]]);
+    } finally {
+      debugSpy.mockRestore();
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
+  });
+});
+
 describe("nextInternalFlag", () => {
   it.each([
     ["?internal=1", false, true],
