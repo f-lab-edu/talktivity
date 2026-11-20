@@ -22,7 +22,7 @@ export function LandingStep({
         <span className="title-period">.</span>
       </h1>
       <p className="landing-subtitle">
-        스레드/릴스 화제의 카톡 심리 테스트!
+        스레드/릴스 화제의 카톡 말투 테스트!
         <br />
         3초 만에 보는 내 톡 성향
       </p>

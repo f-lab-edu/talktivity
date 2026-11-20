@@ -275,7 +275,7 @@ Single page `app/page.tsx` drives steps with `useReducer`: landing -> input -> l
 Persist the last result in `sessionStorage` so refresh on the result step keeps it.
 
 1. **LandingStep**: biggest title "카톡 대화 팩폭 분석기"; subtitle
-   "스레드/릴스 화제의 카톡 심리 테스트! 3초 만에 보는 내 톡 성향"; one modern illustration
+   "스레드/릴스 화제의 카톡 말투 테스트! 3초 만에 보는 내 톡 성향"; one modern illustration
    area (inline SVG/CSS chat-bubble art, no external images); bottom-fixed thumb-zone primary
    CTA "무료로 내 톡 팩폭 보기 (가입 없이 3초 소요)" with `env(safe-area-inset-bottom)`;
    secondary "예시 대화로 1초 만에 테스트하기".
@@ -286,7 +286,7 @@ Persist the last result in `sessionStorage` so refresh on the result step keeps 
    but don't wait longer than the API.
 4. **ResultStep**: the shareable card (emoji/illustration, character name, tagline, 3 roast
    lines, four animated axis bars, confidence, badges) - contains no conversation text; below it the long
-   reading section (연애운, 팁, 추천 대화법); share/save buttons; paywall teaser.
+   reading section (대화 흐름 코멘트, 팁, 추천 대화법); share/save buttons; paywall teaser.
 5. **Share**: `lib/kakao.ts` loads the SDK via `next/script`, `Kakao.init` once, then
    `Kakao.Share.sendDefault` feed template:
    - title `[톡티비티] 나 '[캐릭터명]' 나왔어 ㅋㅋㅋ`

@@ -151,7 +151,7 @@ export function ResultStep({
       <section className="reading-section">
         <p className="eyebrow">한 겹 더 들여다보면</p>
         <h2>우리 대화의 다음 장</h2>
-        <h3>연애운 · 대화 운</h3>
+        <h3>대화 흐름 코멘트</h3>
         <p>{data.result.reading.loveFortune}</p>
         <h3>나를 위한 대화 팁</h3>
         <ol>
