@@ -14,6 +14,7 @@ try {
     "supabase/test/bootstrap.sql",
     "supabase/migrations/0001_profiles.sql",
     "supabase/migrations/0002_billing.sql",
+    "supabase/migrations/0003_products.sql",
   ]) {
     await $`${compose} exec -T db psql -U postgres -d talktivity_test -v ON_ERROR_STOP=1 < ${Bun.file(path)}`;
   }

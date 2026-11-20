@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { parseCatalog } from "../lib/core/billing/catalog";
 import { couponCodeSchema, normalizeCoupon } from "../lib/core/billing/coupon";
 import { decideWebhook, webhookEnvelopeSchema } from "../lib/core/billing/webhook";
 
@@ -7,7 +6,7 @@ const priceId = "pri_01gsz8z1q1n00f12qt82y31smh";
 const transactionId = "txn_01h04vsbhqc62t8hmd4z3b578c";
 const adjustmentId = "adj_01ghvjt9dbpnndeqjve8cktgqs";
 const userId = "11111111-1111-4111-8111-111111111111";
-const catalog = { priceId, credits: 5 };
+const catalog = [{ priceId, credits: 5, active: true }];
 const completed = {
   event_type: "transaction.completed",
   data: {
@@ -19,19 +18,6 @@ const completed = {
 };
 
 describe("설정과 쿠폰 경계", () => {
-  it("기본 팩은 1크레딧이며 설정한 양의 정수를 보존한다", () => {
-    expect(parseCatalog({ priceId, credits: undefined })).toEqual({ priceId, credits: 1 });
-    expect(parseCatalog({ priceId, credits: "5" })).toEqual(catalog);
-  });
-  it.each(["", "0", "-1", "1.5", "2x", "2147483648"])(
-    "잘못된 크레딧 %s는 카탈로그를 비활성화한다",
-    (credits) => {
-      expect(parseCatalog({ priceId, credits })).toBeNull();
-    },
-  );
-  it("가격이 없으면 카탈로그가 없다", () => {
-    expect(parseCatalog({ priceId: undefined, credits: "1" })).toBeNull();
-  });
   it("공백·소문자 쿠폰을 정규화한다", () => {
     expect(couponCodeSchema.parse(normalizeCoupon(" we lcome-20 \n"))).toBe("WELCOME-20");
   });
@@ -79,7 +65,7 @@ describe("웹훅 결정", () => {
     });
   });
   it("카탈로그가 없거나 관련 없는 이벤트는 무시한다", () => {
-    expect(decideWebhook(completed, null)).toEqual({ kind: "ignore" });
+    expect(decideWebhook(completed, [])).toEqual({ kind: "ignore" });
     expect(decideWebhook({ event_type: "subscription.created", data: {} }, catalog)).toEqual({
       kind: "ignore",
     });
@@ -98,7 +84,7 @@ describe("웹훅 결정", () => {
               transaction_id: transactionId,
             },
           },
-          null,
+          [],
         ),
       ).toEqual({
         kind: "revoke",
@@ -107,6 +93,25 @@ describe("웹훅 결정", () => {
       });
     },
   );
+  it("활성 상품과 비활성 상품의 크레딧을 수량별로 합산한다", () => {
+    const inactivePrice = "pri_00000000000000000000000001";
+    expect(
+      decideWebhook(
+        {
+          ...completed,
+          data: {
+            ...completed.data,
+            items: [
+              ...completed.data.items,
+              { price: { id: inactivePrice }, quantity: 3 },
+              { price: { id: "pri_00000000000000000000000002" }, quantity: 50 },
+            ],
+          },
+        },
+        [...catalog, { priceId: inactivePrice, credits: 7, active: false }],
+      ),
+    ).toMatchObject({ kind: "grant", credits: 31 });
+  });
   it.each([
     { action: "refund", status: "pending_approval" },
     { action: "refund", status: "rejected" },

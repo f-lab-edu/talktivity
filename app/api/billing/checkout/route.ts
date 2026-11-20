@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     if (!parsed.success) return billingError("INVALID_INPUT", "결제 요청을 확인해 주세요.", 400);
     return billingJson(
       checkoutResponseSchema.parse({
-        transactionId: await createTransaction(user.id, parsed.data.posthogId),
+        transactionId: await createTransaction(user.id, parsed.data),
       }),
     );
   } catch (error) {

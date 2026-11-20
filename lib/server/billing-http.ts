@@ -37,6 +37,8 @@ export function billingFailure(error: unknown): Response {
   }
   if (error instanceof PaddleError) {
     switch (error.code) {
+      case "PRODUCT_NOT_FOUND":
+        return billingError(error.code, "구매 가능한 상품을 찾을 수 없어요.", 400);
       case "BILLING_DISABLED":
         return billingError(error.code, "결제 서비스를 준비 중이에요.", 503);
       case "CHECKOUT_FAILED":

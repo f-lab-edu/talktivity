@@ -8,7 +8,7 @@ const user = "11111111-1111-4111-8111-111111111111";
 const other = "22222222-2222-4222-8222-222222222222";
 
 beforeEach(async () => {
-  await db`truncate public.credit_ledger, public.coupons, public.reports, auth.users cascade`;
+  await db`truncate public.products, public.credit_ledger, public.coupons, public.reports, auth.users cascade`;
   await db`insert into auth.users(id) values (${user}), (${other})`;
 });
 afterAll(() => db.close());
@@ -141,11 +141,22 @@ describe.each(["anon", "authenticated"])("%s 권한 경계", (role) => {
       }),
     ).rejects.toThrow("permission denied for function");
   });
-  it.each(["credit_ledger", "coupons", "reports"])("%s 테이블을 조회할 수 없다", async (table) => {
+  it.each(["credit_ledger", "coupons", "reports", "products"])(
+    "%s 테이블을 조회할 수 없다",
+    async (table) => {
+      await expect(
+        db.begin(async (tx) => {
+          await tx.unsafe(`set local role ${role}`);
+          await tx.unsafe(`select * from ${table}`);
+        }),
+      ).rejects.toThrow("permission denied for table");
+    },
+  );
+  it("상품을 등록할 수 없다", async () => {
     await expect(
       db.begin(async (tx) => {
         await tx.unsafe(`set local role ${role}`);
-        await tx.unsafe(`select * from ${table}`);
+        await tx`insert into products(price_id, name, credits) values ('pri_denied', '팩', 1)`;
       }),
     ).rejects.toThrow("permission denied for table");
   });
@@ -159,4 +170,15 @@ it("service_role은 RLS가 켜진 결제 함수와 테이블을 사용한다", a
     return tx`select credit_balance(${user}) as balance`;
   });
   expect(rows).toEqual([{ balance: 0 }]);
+});
+
+it("service_role은 상품을 등록하고 기본값과 함께 조회한다", async () => {
+  const rows = await db.begin(async (tx) => {
+    await tx`set local role service_role`;
+    await tx`insert into products(price_id, name, credits) values ('pri_service', '팩', 3)`;
+    return tx`select price_id, name, credits, active, sort from products`;
+  });
+  expect(rows).toEqual([
+    { price_id: "pri_service", name: "팩", credits: 3, active: true, sort: 0 },
+  ]);
 });

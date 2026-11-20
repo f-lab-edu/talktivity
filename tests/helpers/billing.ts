@@ -27,15 +27,18 @@ export function billingHarness() {
   const wire: {
     respond: (request: Request) => Response | Promise<Response>;
     readonly requests: Request[];
+    products: { price_id: string; name: string; credits: number; active: boolean }[];
   } = {
     respond: (request) => {
       throw new Error(`Unexpected URL ${request.url}`);
     },
     requests: [],
+    products: [],
   };
   beforeEach(() => {
     vi.resetModules();
     wire.requests.length = 0;
+    wire.products = [{ price_id: priceId, name: "크레딧 팩", credits: 5, active: true }];
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-11-20T00:00:00Z"));
     for (const [key, value] of Object.entries({
@@ -45,8 +48,6 @@ export function billingHarness() {
       PADDLE_ENV: "sandbox",
       PADDLE_API_KEY: "paddle-test-key",
       PADDLE_WEBHOOK_SECRET: "webhook-test-secret",
-      PADDLE_PRICE_ID: priceId,
-      CREDITS_PER_PURCHASE: "5",
       LLM_PROVIDER: "mock",
       REPORT_SYSTEM_PROMPT: "fake system",
       UPSTASH_REDIS_REST_URL: "",
@@ -62,6 +63,8 @@ export function billingHarness() {
         if (request.url === `${supabaseUrl}/auth/v1/.well-known/jwks.json`)
           return Response.json({ keys: [golden.publicJwk] });
         wire.requests.push(request.clone());
+        if (new URL(request.url).pathname === "/rest/v1/products")
+          return Response.json(wire.products);
         return wire.respond(request);
       }),
     );

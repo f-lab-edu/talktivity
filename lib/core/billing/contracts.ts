@@ -1,10 +1,11 @@
 import { z } from "zod";
-import { transactionIdSchema } from "./catalog";
+import { priceIdSchema, transactionIdSchema } from "./catalog";
 import { paidReportSchema } from "./report";
 
 export const creditsResponseSchema = z.object({ balance: z.number().int() }).strict();
 export const checkoutRequestSchema = z
   .object({
+    priceId: priceIdSchema,
     posthogId: z.string().max(200).optional(),
   })
   .strict();

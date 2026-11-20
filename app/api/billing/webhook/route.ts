@@ -1,8 +1,7 @@
 import { verifyPaddleSignature } from "@/lib/core/billing/paddle-signature";
 import { decideWebhook, webhookEnvelopeSchema } from "@/lib/core/billing/webhook";
 import { billingError, billingFailure, billingJson } from "@/lib/server/billing-http";
-import { grantCredits, revokePurchase } from "@/lib/server/billing-store";
-import { billingCatalog } from "@/lib/server/paddle";
+import { billingCatalog, grantCredits, revokePurchase } from "@/lib/server/billing-store";
 
 export async function POST(request: Request) {
   try {
@@ -18,7 +17,10 @@ export async function POST(request: Request) {
       return billingError("INVALID_SIGNATURE", "웹훅 서명을 확인해 주세요.", 401);
     const parsed = webhookEnvelopeSchema.safeParse(JSON.parse(rawBody));
     if (!parsed.success) return billingError("INVALID_WEBHOOK", "웹훅 형식을 확인해 주세요.", 400);
-    const decision = decideWebhook(parsed.data, billingCatalog());
+    const decision = decideWebhook(
+      parsed.data,
+      parsed.data.event_type === "transaction.completed" ? await billingCatalog() : [],
+    );
     switch (decision.kind) {
       case "grant":
         await grantCredits(decision);

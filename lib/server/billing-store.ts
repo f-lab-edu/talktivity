@@ -31,6 +31,30 @@ export async function creditBalance(userId: string): Promise<number> {
   if (error) throw storeError(error);
   return z.number().int().parse(data);
 }
+export async function billingCatalog() {
+  const { data, error } = await supabaseAdmin()
+    .from("products")
+    .select("price_id, name, credits, active")
+    .order("sort", { ascending: true })
+    .order("price_id", { ascending: true });
+  if (error) throw storeError(error);
+  return z
+    .array(
+      z.object({
+        price_id: z.string().startsWith("pri_"),
+        name: z.string(),
+        credits: z.number().int().positive().max(2147483647),
+        active: z.boolean(),
+      }),
+    )
+    .parse(data)
+    .map((row) => ({
+      priceId: row.price_id,
+      name: row.name,
+      credits: row.credits,
+      active: row.active,
+    }));
+}
 export async function grantCredits(grant: {
   readonly userId: string;
   readonly credits: number;

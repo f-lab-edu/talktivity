@@ -2,10 +2,17 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
+    "priceId": {
+      "type": "string",
+      "pattern": "^pri_[a-z\\d]{26}$"
+    },
     "posthogId": {
       "type": "string",
       "maxLength": 200
     }
   },
+  "required": [
+    "priceId"
+  ],
   "additionalProperties": false
 }

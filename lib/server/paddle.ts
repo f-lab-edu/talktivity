@@ -1,25 +1,28 @@
 import "server-only";
 import { z } from "zod";
-import { parseCatalog, transactionIdSchema } from "@/lib/core/billing/catalog";
+import { transactionIdSchema } from "@/lib/core/billing/catalog";
+import { billingCatalog } from "@/lib/server/billing-store";
 
 export class PaddleError extends Error {
-  constructor(readonly code: "BILLING_DISABLED" | "CHECKOUT_FAILED") {
+  constructor(readonly code: "BILLING_DISABLED" | "CHECKOUT_FAILED" | "PRODUCT_NOT_FOUND") {
     super(code);
     this.name = "PaddleError";
   }
 }
-export function billingCatalog() {
-  return parseCatalog({
-    priceId: process.env.PADDLE_PRICE_ID,
-    credits: process.env.CREDITS_PER_PURCHASE,
-  });
-}
-export async function createTransaction(userId: string, posthogId?: string): Promise<string> {
+export async function createTransaction(
+  userId: string,
+  input: {
+    readonly priceId: string;
+    readonly posthogId?: string | undefined;
+  },
+): Promise<string> {
   const environment = z.enum(["sandbox", "production"]).safeParse(process.env.PADDLE_ENV);
   const key = process.env.PADDLE_API_KEY;
-  const catalog = billingCatalog();
-  if (!environment.success || !key || !process.env.PADDLE_WEBHOOK_SECRET || !catalog)
+  if (!environment.success || !key || !process.env.PADDLE_WEBHOOK_SECRET)
     throw new PaddleError("BILLING_DISABLED");
+  const catalog = await billingCatalog();
+  if (!catalog.some((product) => product.priceId === input.priceId && product.active))
+    throw new PaddleError("PRODUCT_NOT_FOUND");
   const base =
     environment.data === "sandbox" ? "https://sandbox-api.paddle.com" : "https://api.paddle.com";
   try {
@@ -29,9 +32,9 @@ export async function createTransaction(userId: string, posthogId?: string): Pro
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       signal: AbortSignal.timeout(10_000),
       body: JSON.stringify({
-        items: [{ price_id: catalog.priceId, quantity: 1 }],
+        items: [{ price_id: input.priceId, quantity: 1 }],
         collection_mode: "automatic",
-        custom_data: { userId, ...(posthogId ? { posthogId } : {}) },
+        custom_data: { userId, ...(input.posthogId ? { posthogId: input.posthogId } : {}) },
       }),
     });
     if (!response.ok) throw new PaddleError("CHECKOUT_FAILED");

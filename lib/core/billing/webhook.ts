@@ -28,17 +28,19 @@ export type WebhookDecision =
 
 export function decideWebhook(
   event: z.infer<typeof webhookEnvelopeSchema>,
-  catalog: Catalog | null,
+  catalog: Catalog,
 ): WebhookDecision {
   switch (event.event_type) {
     case "transaction.completed": {
       const parsed = completedSchema.safeParse(event.data);
-      if (!parsed.success || !catalog) return { kind: "ignore" };
-      const quantity = parsed.data.items.reduce(
-        (total, item) => total + (item.price.id === catalog.priceId ? item.quantity : 0),
+      if (!parsed.success) return { kind: "ignore" };
+      const credits = parsed.data.items.reduce(
+        (total, item) =>
+          total +
+          item.quantity *
+            (catalog.find((product) => product.priceId === item.price.id)?.credits ?? 0),
         0,
       );
-      const credits = quantity * catalog.credits;
       if (!Number.isSafeInteger(credits) || credits < 1 || credits > 2147483647)
         return { kind: "ignore" };
       return {

@@ -71,7 +71,7 @@ describe("Paddle webhook 라우트", () => {
   ])("무관하거나 조건에 맞지 않는 이벤트는 지급 없이 확인한다", async (event) => {
     const { POST } = await import("../app/api/billing/webhook/route");
     expect((await POST(webhookRequest(event))).status).toBe(200);
-    expect(wire.requests).toHaveLength(0);
+    expect(wire.requests.filter((request) => !request.url.includes("/products?"))).toHaveLength(0);
   });
   it("승인 환불의 사용자를 원장의 거래 참조로 찾고 회수한다", async () => {
     wire.respond = async (request) => {

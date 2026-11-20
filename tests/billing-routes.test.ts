@@ -73,19 +73,22 @@ describe("결제 생성", () => {
       };
       const { POST } = await import("../app/api/billing/checkout/route");
       const response = await POST(
-        authenticatedRequest("/api/billing/checkout", { posthogId: "anonymous-analytics-id" }),
+        authenticatedRequest("/api/billing/checkout", {
+          priceId,
+          posthogId: "anonymous-analytics-id",
+        }),
       );
       expect(response.status).toBe(200);
       expect(checkoutResponseSchema.parse(await response.json())).toEqual({ transactionId });
       expect(response.headers.get("Cache-Control")).toBe("no-store");
     },
   );
-  it.each(["PADDLE_ENV", "PADDLE_API_KEY", "PADDLE_WEBHOOK_SECRET", "PADDLE_PRICE_ID"])(
+  it.each(["PADDLE_ENV", "PADDLE_API_KEY", "PADDLE_WEBHOOK_SECRET"])(
     "%s 없으면 503이다",
     async (name) => {
       vi.stubEnv(name, "");
       const { POST } = await import("../app/api/billing/checkout/route");
-      const response = await POST(authenticatedRequest("/api/billing/checkout", {}));
+      const response = await POST(authenticatedRequest("/api/billing/checkout", { priceId }));
       expect(response.status).toBe(503);
       expect(await response.json()).toMatchObject({ error: { code: "BILLING_DISABLED" } });
       expect(wire.requests).toHaveLength(0);
@@ -102,9 +105,17 @@ describe("결제 생성", () => {
   it("Paddle 장애는 재시도 없이 502로 반환한다", async () => {
     wire.respond = () => Response.json({ error: "private vendor error" }, { status: 503 });
     const { POST } = await import("../app/api/billing/checkout/route");
-    const response = await POST(authenticatedRequest("/api/billing/checkout", {}));
+    const response = await POST(authenticatedRequest("/api/billing/checkout", { priceId }));
     expect(response.status).toBe(502);
-    expect(wire.requests).toHaveLength(1);
+    expect(wire.requests).toHaveLength(2);
+  });
+  it.each([false, true])("비활성 또는 미등록 상품은 400이다: %s", async (missing) => {
+    wire.products = missing ? [] : [{ price_id: priceId, name: "중지", credits: 5, active: false }];
+    const { POST } = await import("../app/api/billing/checkout/route");
+    const response = await POST(authenticatedRequest("/api/billing/checkout", { priceId }));
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ error: { code: "PRODUCT_NOT_FOUND" } });
+    expect(wire.requests.every((request) => !request.url.includes("paddle.com"))).toBe(true);
   });
 });
 
