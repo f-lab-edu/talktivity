@@ -11,7 +11,7 @@ const invalidPageText = "이 결과는 찾을 수 없어요";
 const sample = {
   conversation:
     "민수: 오늘 저녁에 파스타 먹으러 갈래?\n지수: 좋아! 네가 좋아하는 곳으로 가자 ㅋㅋ\n민수: 7시 어때? 내가 예약할게!\n지수: 완전 좋아 😊",
-  relationship: "썸남/썸녀",
+  relationship: "썸",
   mySpeaker: "민수",
 };
 

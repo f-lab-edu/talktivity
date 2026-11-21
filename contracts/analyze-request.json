@@ -10,12 +10,9 @@
     },
     "relationship": {
       "type": "string",
-      "enum": [
-        "썸남/썸녀",
-        "연인",
-        "단짝 친구",
-        "회사 동료"
-      ]
+      "minLength": 1,
+      "maxLength": 20,
+      "pattern": "^[^\\r\\n]*$"
     },
     "mySpeaker": {
       "type": "string",

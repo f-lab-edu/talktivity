@@ -2,11 +2,12 @@
 
 import { ArrowLeft, ArrowRight, ImagePlus, LoaderCircle, ShieldCheck } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { RelationshipField } from "@/components/relationship-field";
 import { Button } from "@/components/ui/button";
 import { track } from "@/lib/analytics";
 import { exampleConversation } from "@/lib/core/example";
 import { speakersIn } from "@/lib/core/parse-kakao";
-import { type AnalysisRequest, errorSchema, relationships, requestSchema } from "@/lib/core/schema";
+import { type AnalysisRequest, errorSchema, requestSchema } from "@/lib/core/schema";
 import { type Draft, loadDraft, saveDraft } from "@/lib/draft";
 import { compressScreenshot } from "@/lib/screenshot";
 
@@ -203,24 +204,7 @@ export function InputStep({
             </div>
           </fieldset>
         )}
-        <fieldset>
-          <legend>
-            어떤 사이인가요? <span className="required">필수</span>
-          </legend>
-          <div className="chips">
-            {relationships.map((item) => (
-              <button
-                key={item}
-                type="button"
-                className="chip"
-                aria-pressed={item === relationship}
-                onClick={() => setRelationship(item)}
-              >
-                {item}
-              </button>
-            ))}
-          </div>
-        </fieldset>
+        <RelationshipField value={relationship} onChange={setRelationship} />
         <p id="privacy" className="privacy">
           <ShieldCheck size={16} /> 캡처와 대화는 저장하지 않고, 이름은 '상대'로 바꿔 분석해요.
         </p>

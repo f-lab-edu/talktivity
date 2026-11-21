@@ -1,6 +1,7 @@
 "use client";
 
 import type { AxisScores, BadgeId, TypeCode } from "@/lib/core/classification";
+import type { relationshipAnalyticsValue } from "@/lib/core/schema";
 
 export type AxisBucket =
   | "0-9"
@@ -59,7 +60,10 @@ type EventProps = {
   readonly extract_submit: { readonly count: number };
   readonly extract_success: undefined;
   readonly extract_error: { readonly code: string };
-  readonly analyze_submit: { readonly source: "text" | "screenshot" };
+  readonly analyze_submit: {
+    readonly source: "text" | "screenshot";
+    readonly relationship: ReturnType<typeof relationshipAnalyticsValue>;
+  };
   readonly analyze_success: undefined;
   readonly analyze_error: { readonly code: string };
   readonly result_view: TypeAnalyticsProps;
@@ -102,7 +106,7 @@ const eventPropertyAllowlist = {
   extract_submit: ["count"],
   extract_success: [],
   extract_error: ["code"],
-  analyze_submit: ["source"],
+  analyze_submit: ["source", "relationship"],
   analyze_success: [],
   analyze_error: ["code"],
   result_view: ["typeCode", "badges", "direction", "length", "color", "stance"],

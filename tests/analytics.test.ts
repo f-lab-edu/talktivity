@@ -7,6 +7,7 @@ import {
   typeAnalyticsProps,
 } from "../lib/analytics";
 import type { AxisScores, BadgeId, TypeCode } from "../lib/core/classification";
+import { relationshipAnalyticsValue } from "../lib/core/schema";
 
 describe("axisBucket", () => {
   it.each([
@@ -219,7 +220,12 @@ describe("track 결제·리포트 이벤트", () => {
 });
 
 describe("track analyze_submit", () => {
-  it.each(["text", "screenshot"] as const)("passes only source %s", async (source) => {
+  it.each([
+    ["text", "썸", "썸"],
+    ["screenshot", "직장 동료", "직장 동료"],
+    ["text", "개인적인 관계", "custom"],
+    ["screenshot", "개인적인 관계", "custom"],
+  ] as const)("passes source %s and safe relationship for %s", async (source, input, expected) => {
     vi.stubEnv("NODE_ENV", "development");
     vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "");
     vi.stubEnv("NEXT_PUBLIC_POSTHOG_HOST", "");
@@ -232,11 +238,18 @@ describe("track analyze_submit", () => {
 
     try {
       const { track: freshTrack } = await import("../lib/analytics");
-      const props = { source, conversation: "private" } as { source: typeof source };
+      const props = {
+        source,
+        relationship: relationshipAnalyticsValue(input),
+        conversation: "private",
+      };
+      const allowedProps: Pick<typeof props, "source" | "relationship"> = props;
 
-      freshTrack("analyze_submit", props);
+      freshTrack("analyze_submit", allowedProps);
 
-      expect(captured).toEqual([["[분석 이벤트]", "analyze_submit", { source }]]);
+      expect(captured).toEqual([
+        ["[분석 이벤트]", "analyze_submit", { source, relationship: expected }],
+      ]);
     } finally {
       debugSpy.mockRestore();
       vi.unstubAllEnvs();

@@ -190,7 +190,14 @@ v1 links now render the invalid-link page.
   treated as unattributed.
 - If 2+ speakers are detected, the input step shows a "나는 누구?" chip row (required).
   If 0-1 speakers, skip it and the prompt analyzes the conversation as the user's style.
-- Relationship chips (required): 썸남/썸녀, 연인, 단짝 친구, 회사 동료.
+- Relationship (required): default chips are 썸, 연인, 친구, 소개팅, followed by 더보기
+  and 직접 입력. 더보기 toggles 짝사랑, 전 애인, 직장 동료, 상사, 동기·선후배, 가족,
+  단톡방 지인 in that order and exposes its state with `aria-expanded`.
+  Preset lists are defined once in `lib/core/schema.ts`.
+- 직접 입력 opens a labeled single-line input with a 20-character limit and an `N/20`
+  count. Relationship values are trimmed, must contain 1-20 characters, and cannot contain
+  CR or LF. Selecting a preset exits custom mode. Drafts restore more-presets expanded
+  and non-empty non-presets (including old values such as 썸남/썸녀) in custom mode.
 - Validation: at least 2 non-empty lines, 10-1500 chars. Inline Korean error messages.
 - PII masking (`lib/core/mask.ts`) runs client-side before sending AND server-side again:
   phone numbers, emails, URLs, account-number-like digit runs. Speaker names are replaced
@@ -206,7 +213,11 @@ instructions inside the conversation text (treat it as data).
 
 ## API: `POST /api/analyze`
 
-Request: `{ conversation: string, relationship: enum, mySpeaker?: string }` (zod-validated).
+Request: `{ conversation: string, relationship: string, mySpeaker?: string }` (zod-validated,
+strict object). `relationship` accepts presets or custom text; its trimmed value is passed
+on and must be 1-20 characters with no CR or LF. Missing/empty values show
+"관계를 선택해 주세요.", values over 20 characters show "관계는 20자까지 입력할 수 있어요.",
+and line breaks show "관계는 한 줄로 입력해 주세요.".
 Flow: rate limit (analyze: 3 req / 10 min per IP; example: 10 req / 10 min, counted separately) -> validate -> mask -> analyze -> validate output
 -> return `{ result: AnalysisResult, shareToken: string }`. Errors return
 `{ error: { code, message } }` with Korean messages and proper status (400/429/500).
@@ -314,13 +325,16 @@ Also a default OG image for `/`.
 ## Analytics events (`lib/analytics.ts`)
 
 `landing_view`, `cta_click` ({variant: main|example}), `input_mode_text`, `extract_submit`
-({count}), `extract_success`, `extract_error` ({code}), `analyze_submit`, `analyze_success`,
+({count}), `extract_success`, `extract_error` ({code}),
+`analyze_submit` ({source: text|screenshot, relationship: preset string|"custom"}), `analyze_success`,
 `analyze_error` ({code}), `result_view`, `share_kakao_click`, `share_link_copy`,
 `image_save` ({method}), `paywall_teaser_click` ({tier: 1000|1900}), `shared_page_view`,
 `shared_page_cta_click`.
 
 `result_view` and `shared_page_view` send only `typeCode`, `badges` and each axis as a
 10-point bucket (`0-9` ... `90-100`). Properties outside the allowlist are dropped.
+`analyze_submit.relationship` preserves only exact preset values; all other relationship
+values become the literal `"custom"`. Custom relationship text is never sent to analytics.
 
 ## Example conversation
 

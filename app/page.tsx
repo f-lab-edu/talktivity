@@ -7,7 +7,12 @@ import { LoadingStep } from "@/components/loading-step";
 import { ResultStep } from "@/components/result-step";
 import { track } from "@/lib/analytics";
 import { maskPII } from "@/lib/core/mask";
-import { type AnalysisRequest, errorSchema, responseSchema } from "@/lib/core/schema";
+import {
+  type AnalysisRequest,
+  errorSchema,
+  relationshipAnalyticsValue,
+  responseSchema,
+} from "@/lib/core/schema";
 import { clearDraft } from "@/lib/draft";
 import { flowReducer } from "@/lib/flow";
 import { clearLastRequest, saveLastRequest } from "@/lib/last-request";
@@ -46,7 +51,11 @@ export default function Home() {
     const controller = new AbortController();
     activeRequest.current = controller;
     dispatch({ type: "loading" });
-    if (request) track("analyze_submit", { source });
+    if (request)
+      track("analyze_submit", {
+        source,
+        relationship: relationshipAnalyticsValue(request.relationship),
+      });
     try {
       const body = request
         ? {

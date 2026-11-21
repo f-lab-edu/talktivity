@@ -5,7 +5,12 @@ import { extractConversation, latestConversationWithinLimit } from "../lib/core/
 import { maskPII, prepareConversation } from "../lib/core/mask";
 import { mockAnalyze } from "../lib/core/mock-analyzer";
 import { parseKakao, speakersIn } from "../lib/core/parse-kakao";
-import { requestSchema, resultSchema } from "../lib/core/schema";
+import {
+  relationshipAnalyticsValue,
+  relationshipPresets,
+  requestSchema,
+  resultSchema,
+} from "../lib/core/schema";
 
 describe("대화 파서", () => {
   it.each([
@@ -82,10 +87,46 @@ describe("입력 및 결과 계약", () => {
   ])("문자 수와 두 줄 경계를 검증한다", (conversation, success) => {
     expect(requestSchema.safeParse({ conversation, relationship: "연인" }).success).toBe(success);
   });
-  it("허용되지 않은 관계를 거절한다", () => {
+  it.each([...relationshipPresets, "모르는 사이", "썸남/썸녀", "가".repeat(20)])(
+    "프리셋과 직접 입력 관계를 허용한다: %s",
+    (relationship) => {
+      expect(
+        requestSchema.safeParse({ conversation: "안녕하세요\n반가워요", relationship }).success,
+      ).toBe(true);
+    },
+  );
+  it.each([
+    [undefined, "관계를 선택해 주세요."],
+    ["", "관계를 선택해 주세요."],
+    ["   ", "관계를 선택해 주세요."],
+    ["가".repeat(21), "관계는 20자까지 입력할 수 있어요."],
+    ["친한\n사이", "관계는 한 줄로 입력해 주세요."],
+    ["친한\r사이", "관계는 한 줄로 입력해 주세요."],
+    ["친구\n", "관계는 한 줄로 입력해 주세요."],
+    ["\r친구", "관계는 한 줄로 입력해 주세요."],
+  ])("유효하지 않은 관계는 안내 메시지로 거절한다: %j", (relationship, message) => {
+    const parsed = requestSchema.safeParse({
+      conversation: "안녕하세요\n반가워요",
+      relationship,
+    });
+    expect(parsed.success).toBe(false);
+    if (!parsed.success) expect(parsed.error.issues[0]?.message).toBe(message);
+  });
+  it("관계 앞뒤 공백을 제거한 값을 전달한다", () => {
     expect(
-      requestSchema.safeParse({ conversation: "안녕하세요\n반가워요", relationship: "모르는 사이" })
-        .success,
+      requestSchema.parse({
+        conversation: "안녕하세요\n반가워요",
+        relationship: "  모르는 사이  ",
+      }).relationship,
+    ).toBe("모르는 사이");
+  });
+  it("추가 요청 필드는 계속 거절한다", () => {
+    expect(
+      requestSchema.safeParse({
+        conversation: "안녕하세요\n반가워요",
+        relationship: "친구",
+        extra: true,
+      }).success,
     ).toBe(false);
   });
   it.each([
@@ -99,6 +140,18 @@ describe("입력 및 결과 계약", () => {
     expect(resultSchema.safeParse(exampleResult).success).toBe(true);
     expect(resultSchema.safeParse(result).success).toBe(false);
   });
+});
+
+describe("관계 분석 이벤트 매핑", () => {
+  it.each(relationshipPresets)("프리셋은 그대로 전달한다: %s", (preset) => {
+    expect(relationshipAnalyticsValue(preset)).toBe(preset);
+  });
+  it.each(["모르는 사이", "썸남/썸녀", "개인적인 관계"])(
+    "직접 입력 원문을 custom으로 대체한다: %s",
+    (custom) => {
+      expect(relationshipAnalyticsValue(custom)).toBe("custom");
+    },
+  );
 });
 
 describe("분석기", () => {

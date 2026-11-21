@@ -8,7 +8,24 @@ import {
   typeCodes,
 } from "./classification";
 
-export const relationships = ["썸남/썸녀", "연인", "단짝 친구", "회사 동료"] as const;
+export const primaryRelationships = ["썸", "연인", "친구", "소개팅"] as const;
+export const moreRelationships = [
+  "짝사랑",
+  "전 애인",
+  "직장 동료",
+  "상사",
+  "동기·선후배",
+  "가족",
+  "단톡방 지인",
+] as const;
+export const relationshipPresets = [...primaryRelationships, ...moreRelationships] as const;
+
+export function relationshipAnalyticsValue(
+  value: string,
+): (typeof relationshipPresets)[number] | "custom" {
+  return relationshipPresets.find((preset) => preset === value) ?? "custom";
+}
+
 export const conversationSchema = z
   .string({ error: "대화를 입력해 주세요." })
   .min(10, "대화를 10자 이상 입력해 주세요.")
@@ -17,7 +34,12 @@ export const conversationSchema = z
 export const requestSchema = z
   .object({
     conversation: conversationSchema,
-    relationship: z.enum(relationships, { error: "관계를 선택해 주세요." }),
+    relationship: z
+      .string({ error: "관계를 선택해 주세요." })
+      .regex(/^[^\r\n]*$/, "관계는 한 줄로 입력해 주세요.")
+      .trim()
+      .min(1, "관계를 선택해 주세요.")
+      .max(20, "관계는 20자까지 입력할 수 있어요."),
     mySpeaker: z.string().trim().min(1).max(100).optional(),
   })
   .strict();

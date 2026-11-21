@@ -94,6 +94,23 @@ fieldset {
   border-color: #647a32;
   font-weight: 700;
 }
+.relationship-more,
+.relationship-custom {
+  margin-top: 12px;
+}
+.relationship-custom input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: white;
+  color: var(--foreground);
+  font: inherit;
+}
+.relationship-custom .field-footer {
+  justify-content: flex-end;
+}
 .privacy {
   display: flex;
   align-items: center;
