@@ -65,6 +65,7 @@ export async function generatePaidReport(
         model,
         output: Output.object({ schema: paidReportSchema }),
         maxRetries: 0,
+        reasoning: "low",
         abortSignal: AbortSignal.timeout(20_000),
         ...buildReportPrompt(request, systemPrompt),
       });

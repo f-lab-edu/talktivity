@@ -48,6 +48,7 @@ export async function extractConversation(
         model,
         output: Output.object({ schema: extractionSchema }),
         maxRetries: 0,
+        reasoning: "low",
         abortSignal: AbortSignal.timeout(25_000),
         system: systemPrompt,
         messages: [

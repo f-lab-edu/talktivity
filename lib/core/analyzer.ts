@@ -84,6 +84,7 @@ export async function analyze(
         model,
         output: Output.object({ schema: llmOutputSchema }),
         maxRetries: 0,
+        reasoning: "low",
         abortSignal: AbortSignal.timeout(20_000),
         ...buildAnalysisPrompt(request, hints, systemPrompt),
       });
