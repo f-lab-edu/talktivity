@@ -4,6 +4,7 @@ import { Copy, Download, Info, MessageCircle, RotateCcw } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useId, useRef, useState } from "react";
 import { AxisBars } from "@/components/axis-bars";
+import { PartnerTemperature } from "@/components/partner-temperature";
 import { ResultCard } from "@/components/result-card";
 import { ResultPaywall } from "@/components/result-paywall";
 import { RoastRest } from "@/components/roast-rest";
@@ -40,16 +41,26 @@ export function ResultStep({
   const character = getCharacter(data.result.typeCode);
   const url = resultUrl(data.shareToken);
   const payload = sharePayloadFromResult(data.result);
+  const temperatureLevel = data.result.partnerTemperature?.level;
+  const temperatureSource = data.result.partnerTemperature?.source;
   useEffect(() => {
-    track(
-      "result_view",
-      typeAnalyticsProps({
+    track("result_view", {
+      ...typeAnalyticsProps({
         typeCode: data.result.typeCode,
         axes: data.result.axes,
         badges: data.result.badges,
       }),
-    );
-  }, [data.result.axes, data.result.badges, data.result.typeCode]);
+      ...(temperatureLevel !== undefined && temperatureSource !== undefined
+        ? { partner_temperature: temperatureLevel, temperature_source: temperatureSource }
+        : {}),
+    });
+  }, [
+    data.result.axes,
+    data.result.badges,
+    data.result.typeCode,
+    temperatureLevel,
+    temperatureSource,
+  ]);
   async function copy() {
     try {
       await navigator.clipboard.writeText(url);
@@ -122,6 +133,9 @@ export function ResultStep({
         <ResultCard payload={payload} />
       </div>
       <RoastRest roastLines={payload.roastLines} />
+      {data.result.partnerTemperature && (
+        <PartnerTemperature temperature={data.result.partnerTemperature} />
+      )}
       <section className="axis-explanation" aria-labelledby={explanationId}>
         <h2 id={explanationId}>이렇게 분석했어요</h2>
         <p className="analysis-meta">

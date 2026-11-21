@@ -9,6 +9,62 @@
   overflow-wrap: anywhere;
   text-wrap: balance;
 }
+.temperature {
+  margin: 24px 2px 0;
+  padding: 20px 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+}
+.temperature h2 {
+  font-size: 16px;
+  letter-spacing: -0.4px;
+}
+.temperature-gauge {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+}
+.temperature-step {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  font-size: 24px;
+  line-height: 1;
+}
+.temperature-empty {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--line);
+}
+.temperature-reason {
+  margin-top: 12px;
+  font-size: 14px;
+  line-height: 1.8;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.temperature-note {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--muted);
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.temperature-detail {
+  margin-top: 8px;
+  min-height: 44px;
+  padding-inline: 0;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.temperature-detail:hover {
+  background: transparent;
+}
 .axis-explanation {
   margin: 32px 2px 0;
 }
@@ -156,6 +212,9 @@
   font-size: 12px;
   text-align: center;
   padding-top: 9px;
+}
+.paywall:focus {
+  outline: none;
 }
 .paywall {
   margin-top: 32px;

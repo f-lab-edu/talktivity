@@ -26,6 +26,7 @@ import { clearPendingPurchase, savePendingPurchase } from "@/lib/purchase";
 import { useCredits } from "@/lib/use-credits";
 
 const pendingTierKey = "talktivity:pending-tier";
+export const paywallSectionId = "paid-report-area";
 
 export function ResultPaywall() {
   const viewedTiers = useRef(new Set<number>());
@@ -157,7 +158,7 @@ export function ResultPaywall() {
   }
   return (
     <>
-      <section className="paywall">
+      <section className="paywall" id={paywallSectionId} tabIndex={-1}>
         <div className="section-label">
           <h2>조금 더 궁금하다면</h2>
           <Badge>{checkoutAvailable ? "리포트" : "곧 만나요"}</Badge>

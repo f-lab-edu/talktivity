@@ -8,6 +8,7 @@ import {
   selectAnalyzedTurns,
 } from "./classification";
 import type { Message } from "./parse-kakao";
+import { computePartnerTemperature } from "./partner-temperature";
 import { type AnalysisResult, resultSchema } from "./schema";
 
 export type FinalizeInput = {
@@ -33,7 +34,7 @@ function stanceReason(hints: HintCounts): string {
 
 /**
  * Shared assembly path for analyze(), mockAnalyze() and the example. A model judgment
- * may only supply O/R·D/G raw scores and reasons, the comedian badge and copy.
+ * may supply O/R·D/G raw scores and reasons, partner temperature, the comedian badge and copy.
  */
 export function finalizeAnalysisResult({ messages, judgment }: FinalizeInput): AnalysisResult {
   const turns = selectAnalyzedTurns(groupTurns(messages));
@@ -45,7 +46,14 @@ export function finalizeAnalysisResult({ messages, judgment }: FinalizeInput): A
     judgment?.comedian ?? false,
   );
   const character = characters[classification.typeCode];
+  const fallbackTemperature = computePartnerTemperature(messages);
+  const partnerTemperature = fallbackTemperature
+    ? judgment
+      ? { ...judgment.partnerTemperature, source: "llm" as const }
+      : fallbackTemperature
+    : undefined;
   return resultSchema.parse({
+    ...(partnerTemperature ? { partnerTemperature } : {}),
     typeCode: classification.typeCode,
     axes: classification.axes,
     axisReasons: {

@@ -219,6 +219,47 @@ describe("track 결제·리포트 이벤트", () => {
   });
 });
 
+describe("track 상대 대화 온도 이벤트", () => {
+  it("result_view는 온도가 있을 때만 온도 속성을 보내고 다른 이벤트는 허용된 속성만 보낸다", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_HOST", "");
+    vi.resetModules();
+    const debug = vi.spyOn(console, "debug").mockImplementation(() => {});
+    try {
+      const { track: freshTrack } = await import("../lib/analytics");
+      const base = typeAnalyticsProps({
+        typeCode: "OBCG",
+        axes: { direction: 72, length: 30, color: 88, stance: 55 },
+        badges: [],
+      });
+      freshTrack("result_view", { ...base, partner_temperature: 3, temperature_source: "code" });
+      freshTrack("result_view", base);
+      freshTrack("shared_page_view", base);
+      freshTrack("temperature_fallback");
+      Reflect.apply(freshTrack, undefined, [
+        "temperature_detail_click",
+        { level: 4, reason: "private reason" },
+      ]);
+      expect(debug.mock.calls).toEqual([
+        [
+          "[분석 이벤트]",
+          "result_view",
+          { ...base, partner_temperature: 3, temperature_source: "code" },
+        ],
+        ["[분석 이벤트]", "result_view", base],
+        ["[분석 이벤트]", "shared_page_view", base],
+        ["[분석 이벤트]", "temperature_fallback", {}],
+        ["[분석 이벤트]", "temperature_detail_click", { level: 4 }],
+      ]);
+    } finally {
+      debug.mockRestore();
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
+  });
+});
+
 describe("track 공유 퀴즈 이벤트", () => {
   it("허용된 속성만 전송한다", async () => {
     vi.stubEnv("NODE_ENV", "development");

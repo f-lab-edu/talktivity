@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { z } from "zod";
 import { llmOutputSchema } from "../lib/core/analyzer";
 import { resultSchema } from "../lib/core/schema";
 
@@ -29,6 +30,7 @@ const llmOutput = {
   comedian: true,
   roastLines,
   reading,
+  partnerTemperature: { level: 3, reason: "상대가 질문을 이어갔어요." },
 };
 
 describe("최종 분석 결과 계약", () => {
@@ -36,6 +38,8 @@ describe("최종 분석 결과 계약", () => {
     obcg,
     { ...obcg, badges: [], confidence: "low", sampleSize: 0 },
     { ...obcg, badges: ["emoji"] },
+    { ...obcg, partnerTemperature: { level: 1, reason: "가", source: "code" } },
+    { ...obcg, partnerTemperature: { level: 5, reason: "가".repeat(80), source: "llm" } },
   ])("유효한 결과를 통과시킨다", (result) => {
     expect(resultSchema.safeParse(result).success).toBe(true);
   });
@@ -99,5 +103,63 @@ describe("LLM 출력 계약", () => {
     ["문자열 comedian", { comedian: "true" }],
   ])("%s를 거절한다", (_label, extra) => {
     expect(llmOutputSchema.safeParse({ ...llmOutput, ...extra }).success).toBe(false);
+  });
+});
+
+describe("상대 대화 온도 계약", () => {
+  it("구조화 출력의 온도는 공급자가 지원하는 일반 객체 스키마다", () => {
+    const schema = z.toJSONSchema(llmOutputSchema);
+    expect(schema.properties?.partnerTemperature).toEqual({
+      type: "object",
+      properties: {
+        level: { type: "integer", minimum: 1, maximum: 5 },
+        reason: { type: "string", minLength: 1, maxLength: 80 },
+      },
+      required: ["level", "reason"],
+      additionalProperties: false,
+    });
+  });
+
+  it.each([
+    { level: 0, reason: "가" },
+    { level: 6, reason: "가" },
+    { level: 1.5, reason: "가" },
+    { level: "3", reason: "가" },
+    { level: 3, reason: "" },
+    { level: 3, reason: "가".repeat(81) },
+    { level: 3, reason: "가", extra: true },
+  ])("최종 결과와 모델 출력 모두 잘못된 온도를 거절한다: %j", (temperature) => {
+    expect(
+      resultSchema.safeParse({
+        ...obcg,
+        partnerTemperature: { ...temperature, source: "code" },
+      }).success,
+    ).toBe(false);
+    expect(
+      llmOutputSchema.safeParse({ ...llmOutput, partnerTemperature: temperature }).success,
+    ).toBe(false);
+  });
+
+  it("모델 출력에는 온도가 필수다", () => {
+    const { partnerTemperature: _temperature, ...missing } = llmOutput;
+    expect(llmOutputSchema.safeParse(missing).success).toBe(false);
+  });
+
+  it.each(["unknown", undefined])("최종 결과에는 유효한 출처가 필수다: %s", (source) => {
+    expect(
+      resultSchema.safeParse({
+        ...obcg,
+        partnerTemperature: { level: 3, reason: "가", source },
+      }).success,
+    ).toBe(false);
+  });
+
+  it("모델은 온도의 출처를 지정할 수 없다", () => {
+    expect(
+      llmOutputSchema.safeParse({
+        ...llmOutput,
+        partnerTemperature: { ...llmOutput.partnerTemperature, source: "llm" },
+      }).success,
+    ).toBe(false);
   });
 });

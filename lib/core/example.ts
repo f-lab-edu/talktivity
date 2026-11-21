@@ -10,6 +10,10 @@ export const exampleResult: AnalysisResult = finalizeAnalysisResult({
     direction: { score: 82, reason: "먼저 일정을 묻고 식사 장소까지 제안했어요." },
     stance: { score: 38, reason: "어때? 하고 물으며 상대가 고를 여지를 남겼어요." },
     comedian: false,
+    partnerTemperature: {
+      level: 4,
+      reason: "상대가 장소를 되묻고 취향을 기억한 말에 웃음으로 반응했어요.",
+    },
     roastLines: [
       "파스타 약속도 일정도 깔끔하게 한 번에 정리.",
       "용건은 확실하고 취향 기억력은 검색 엔진급.",

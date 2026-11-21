@@ -92,6 +92,7 @@ export default function Home() {
       const data = responseSchema.parse(json);
       if (request) {
         track("analyze_success");
+        if (data.result.partnerTemperature?.source === "code") track("temperature_fallback");
         clearDraft();
       }
       dispatch({ type: "result", data });

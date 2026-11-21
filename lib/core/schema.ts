@@ -46,6 +46,12 @@ export const requestSchema = z
 const text = z.string().min(1);
 export const axisScoreSchema = z.number().int().min(0).max(100);
 export const axisReasonSchema = text.max(80);
+export const partnerTemperatureJudgmentSchema = z
+  .object({
+    level: z.number().int().min(1).max(5),
+    reason: text.max(80),
+  })
+  .strict();
 export const roastSchema = z.tuple([text.max(60), text.max(60), text.max(60)]);
 export const readingSchema = z
   .object({
@@ -90,6 +96,9 @@ export const resultSchema = z
     badges: badgeIdsSchema,
     roastLines: roastSchema,
     reading: readingSchema,
+    partnerTemperature: partnerTemperatureJudgmentSchema
+      .extend({ source: z.enum(["llm", "code"]) })
+      .optional(),
   })
   .strict()
   .superRefine((result, context) => {

@@ -5,17 +5,20 @@ import { generateText, Output } from "ai";
 import { z } from "zod";
 import { finalizeAnalysisResult } from "./assemble";
 import {
+  countHints,
   deterministicFeatures,
   groupTurns,
   type HintCounts,
   selectAnalyzedTurns,
 } from "./classification";
 import { parseKakao } from "./parse-kakao";
+import { selectPartnerTurns } from "./partner-temperature";
 import {
   type AnalysisRequest,
   type AnalysisResult,
   axisReasonSchema,
   axisScoreSchema,
+  partnerTemperatureJudgmentSchema,
   readingSchema,
 } from "./schema";
 
@@ -30,6 +33,7 @@ export const llmOutputSchema = z
     comedian: z.boolean(),
     roastLines: z.array(z.string().min(1).max(60)).length(3),
     reading: readingSchema,
+    partnerTemperature: partnerTemperatureJudgmentSchema,
   })
   .strict();
 export type LlmOutput = z.infer<typeof llmOutputSchema>;
@@ -64,6 +68,7 @@ export function buildAnalysisPrompt(
     prompt: JSON.stringify({
       relationship: request.relationship,
       hints,
+      partnerHints: countHints(selectPartnerTurns(groupTurns(parseKakao(request.conversation)))),
       conversation: request.conversation,
     }),
   };

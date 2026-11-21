@@ -137,6 +137,34 @@
           "minItems": 3,
           "maxItems": 3
         },
+        "partnerTemperature": {
+          "type": "object",
+          "properties": {
+            "level": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            "source": {
+              "type": "string",
+              "enum": [
+                "llm",
+                "code"
+              ]
+            }
+          },
+          "required": [
+            "level",
+            "reason",
+            "source"
+          ],
+          "additionalProperties": false
+        },
         "reading": {
           "type": "object",
           "properties": {

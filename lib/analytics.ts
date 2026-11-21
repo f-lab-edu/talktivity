@@ -53,6 +53,11 @@ export function typeAnalyticsProps(input: {
   };
 }
 
+type ResultViewProps = TypeAnalyticsProps & {
+  readonly partner_temperature?: number;
+  readonly temperature_source?: "llm" | "code";
+};
+
 type EventProps = {
   readonly landing_view: undefined;
   readonly cta_click: { readonly variant: "main" | "example" };
@@ -66,7 +71,7 @@ type EventProps = {
   };
   readonly analyze_success: undefined;
   readonly analyze_error: { readonly code: string };
-  readonly result_view: TypeAnalyticsProps;
+  readonly result_view: ResultViewProps;
   readonly share_kakao_click: undefined;
   readonly share_link_copy: undefined;
   readonly image_save: { readonly method: string };
@@ -90,6 +95,8 @@ type EventProps = {
   readonly shared_page_cta_click: { readonly answered: boolean };
   readonly shared_quiz_answer: { readonly correct: boolean };
   readonly shared_quiz_skip: undefined;
+  readonly temperature_fallback: undefined;
+  readonly temperature_detail_click: { readonly level: number };
 };
 type EventName = keyof EventProps;
 type EventWithProps = {
@@ -111,7 +118,16 @@ const eventPropertyAllowlist = {
   analyze_submit: ["source", "relationship"],
   analyze_success: [],
   analyze_error: ["code"],
-  result_view: ["typeCode", "badges", "direction", "length", "color", "stance"],
+  result_view: [
+    "typeCode",
+    "badges",
+    "direction",
+    "length",
+    "color",
+    "stance",
+    "partner_temperature",
+    "temperature_source",
+  ],
   share_kakao_click: [],
   share_link_copy: [],
   image_save: ["method"],
@@ -134,6 +150,8 @@ const eventPropertyAllowlist = {
   shared_page_cta_click: ["answered"],
   shared_quiz_answer: ["correct"],
   shared_quiz_skip: [],
+  temperature_fallback: [],
+  temperature_detail_click: ["level"],
 } as const satisfies EventPropertyAllowlist;
 
 // Share tokens embed generated copy, so they are masked in every URL-like value the SDK adds.
