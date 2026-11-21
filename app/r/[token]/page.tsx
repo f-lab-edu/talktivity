@@ -3,11 +3,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SharedResult } from "@/components/shared-result";
 import { Button } from "@/components/ui/button";
-import { activePole, poleLabels } from "@/lib/core/axis-display";
-import { getBadge, getCharacter } from "@/lib/core/characters";
-import { axisIds, axisPoles } from "@/lib/core/classification";
 import { verifyToken } from "@/lib/core/share-token";
 import { shareSecret } from "@/lib/server/share-secret";
+import { shareMeta } from "@/lib/share-meta";
 import { imageUrl, resultUrl } from "@/lib/site";
 
 type Props = { readonly params: Promise<{ token: string }> };
@@ -19,18 +17,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: "공유 결과를 찾을 수 없어요 | 톡티비티",
       robots: { index: false, follow: false },
     };
-  const character = getCharacter(payload.typeCode);
-  const title = `[톡티비티] 나 '${character.name}' 나왔어 ㅋㅋㅋ`;
-  const description = `${character.name}(${payload.typeCode}) · ${character.tagline}. 너는 나랑 카톡할 때 무슨 유형 나올 것 같아? 3초 만에 확인해봐!`;
-  const axes = axisIds
-    .map((axisId) => {
-      const pole = activePole(payload.typeCode, axisId);
-      const score = payload.axes[axisId];
-      return `${poleLabels[pole]} ${pole === axisPoles[axisId][0] ? score : 100 - score}`;
-    })
-    .join(" · ");
-  const badges = payload.badges.map((id) => getBadge(id).name).join("·");
-  const alt = `톡티비티 결과 이미지: ${character.name}(${payload.typeCode}), ${axes}${badges ? `, 배지 ${badges}` : ""}`;
+  const { title, description, alt } = shareMeta(payload.roastLines[0]);
   return {
     title,
     description,

@@ -3,8 +3,10 @@
 import { Copy, Download, Info, MessageCircle, RotateCcw } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useId, useRef, useState } from "react";
+import { AxisBars } from "@/components/axis-bars";
 import { ResultCard } from "@/components/result-card";
 import { ResultPaywall } from "@/components/result-paywall";
+import { RoastRest } from "@/components/roast-rest";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -37,6 +39,7 @@ export function ResultStep({
   const explanationId = useId();
   const character = getCharacter(data.result.typeCode);
   const url = resultUrl(data.shareToken);
+  const payload = sharePayloadFromResult(data.result);
   useEffect(() => {
     track(
       "result_view",
@@ -61,11 +64,7 @@ export function ResultStep({
   async function share() {
     track("share_kakao_click");
     try {
-      const method = await shareKakao({
-        name: character.name,
-        url,
-        imageUrl: imageUrl(data.shareToken),
-      });
+      const method = await shareKakao({ url, imageUrl: imageUrl(data.shareToken) });
       if (method === "copy") {
         track("share_link_copy");
         setNotice("공유 링크를 복사했어요!");
@@ -120,8 +119,9 @@ export function ResultStep({
         <p>숨길 수 없는 나의 톡 본캐</p>
       </div>
       <div ref={card}>
-        <ResultCard payload={sharePayloadFromResult(data.result)} />
+        <ResultCard payload={payload} />
       </div>
+      <RoastRest roastLines={payload.roastLines} />
       <section className="axis-explanation" aria-labelledby={explanationId}>
         <h2 id={explanationId}>이렇게 분석했어요</h2>
         <p className="analysis-meta">
@@ -134,6 +134,7 @@ export function ResultStep({
             분석 신뢰도가 낮아요. 대화를 조금 더 추가하면 더 정확해져요.
           </p>
         )}
+        <AxisBars typeCode={data.result.typeCode} axes={data.result.axes} />
         <dl className="axis-reasons">
           {axisIds.map((axisId) => {
             const pole = activePole(data.result.typeCode, axisId);

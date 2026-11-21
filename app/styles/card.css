@@ -20,9 +20,7 @@
   /* Ink alphas keep secondary text at 4.5:1 or more on the darkest catalog gradient stop. */
   --card-ink: var(--foreground);
   --card-ink-soft: color-mix(in srgb, var(--foreground) 80%, transparent);
-  --card-rule: color-mix(in srgb, var(--foreground) 15%, transparent);
   --card-veil: color-mix(in srgb, var(--surface) 55%, transparent);
-  --card-notch: color-mix(in srgb, var(--surface) 75%, transparent);
   padding: 24px;
   border-radius: 28px;
   color: var(--card-ink);
@@ -49,30 +47,35 @@
   overflow-wrap: anywhere;
   text-wrap: balance;
 }
+.meme-roast {
+  margin-top: 16px;
+  font-family: var(--font-pretendard), Arial, sans-serif;
+  font-size: 25px;
+  font-weight: 700;
+  line-height: 1.45;
+  letter-spacing: -0.8px;
+  text-align: center;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
 .type-code {
   --code-tracking: 0.28em;
-  margin-top: 4px;
+  margin-top: 20px;
   font-family: var(--font-pretendard), Arial, sans-serif;
-  font-size: 18px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: var(--code-tracking);
   padding-left: var(--code-tracking);
   text-align: center;
-}
-.character-tagline {
-  margin-top: 8px;
-  font-size: 13px;
-  text-align: center;
   color: var(--card-ink-soft);
-  word-break: keep-all;
-  overflow-wrap: anywhere;
 }
 .card-badges {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 8px;
-  margin: 16px 0 0;
+  margin: 20px 0 0;
   padding: 0;
   list-style: none;
 }
@@ -85,82 +88,6 @@
   background: var(--card-veil);
   font-size: 12px;
   font-weight: 700;
-}
-.roast-lines {
-  margin-top: 24px;
-  padding-top: 16px;
-  border-top: 1px solid var(--card-rule);
-  font-size: 13px;
-  line-height: 1.8;
-  word-break: keep-all;
-  overflow-wrap: anywhere;
-}
-.roast-lines :where(p + p) {
-  margin-top: 8px;
-}
-.axes {
-  display: grid;
-  gap: 12px;
-  margin: 24px 0 0;
-  padding: 0;
-  list-style: none;
-}
-.axis-head {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  color: var(--card-ink-soft);
-}
-.axis-pole {
-  white-space: nowrap;
-}
-.axis-pole:last-child {
-  grid-column: 3;
-  justify-self: end;
-}
-.axis-pole[data-active="true"] {
-  color: var(--card-ink);
-  font-family: var(--font-pretendard), Arial, sans-serif;
-  font-weight: 700;
-}
-.axis-letter {
-  font-family: var(--font-pretendard), Arial, sans-serif;
-  font-weight: 700;
-}
-.axis-boundary {
-  grid-column: 2;
-  padding: 0 8px;
-  border-radius: 100px;
-  background: var(--card-veil);
-  color: var(--card-ink);
-  font-size: 11px;
-  font-weight: 700;
-}
-.axis-bar {
-  position: relative;
-  height: 8px;
-  border-radius: 100px;
-  background: var(--card-veil);
-  overflow: hidden;
-}
-.axis-fill {
-  position: absolute;
-  inset: 0;
-  background: var(--card-ink);
-}
-/* The active side always holds 50% or more, so the centre notch always lands on the fill. */
-.axis-bar::after {
-  content: "";
-  position: absolute;
-  inset-block: 0;
-  left: 50%;
-  width: 2px;
-  transform: translateX(-50%);
-  background: var(--card-notch);
 }
 .card-brand {
   margin-top: 24px;
