@@ -1,5 +1,9 @@
 .landing {
-  padding: 20px 28px 148px;
+  padding: 20px 28px 0;
+}
+/* Reserve room under the footer so the fixed .landing-actions bar doesn't cover it. */
+.app-shell:has(.landing-actions) .site-footer {
+  padding-bottom: calc(148px + env(safe-area-inset-bottom));
 }
 .eyebrow {
   font-size: 12px;
