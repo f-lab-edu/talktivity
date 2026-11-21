@@ -42,7 +42,15 @@ export default function RootLayout({ children }: { readonly children: ReactNode 
               <span className="header-label">톡으로 보는 나</span>
             </header>
             <main id="main">{children}</main>
-            <footer className="site-footer">© 2026 톡티비티 · 재미로 보는 대화 성향 테스트</footer>
+            <footer className="site-footer">
+              <nav aria-label="정책">
+                <Link href="/privacy">개인정보처리방침</Link>
+                <Link href="/terms">이용약관</Link>
+                <Link href="/refund">환불정책</Link>
+                <a href="mailto:hhmmmteam@gmail.com">hhmmmteam@gmail.com</a>
+              </nav>
+              © 2026 톡티비티 · AI 대화 말투 분석
+            </footer>
           </div>
         </Providers>
       </body>

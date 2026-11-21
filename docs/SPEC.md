@@ -329,6 +329,12 @@ Persist the last result in `sessionStorage` so refresh on the result step keeps 
    "대화가 절대로 안 끊기는 맞춤 답장 3개 추천" 1,900원. Click opens a dialog
    "곧 오픈될 서비스입니다! (1차 MVP 테스트 중)".
 
+## Policy pages
+
+Static server components `app/privacy`, `app/terms` and `app/refund` (개인정보처리방침, 이용약관,
+환불정책; effective 2026-11-21) share `app/styles/legal.css`. The root layout footer links to all three
+and shows the contact email (hhmmmteam@gmail.com).
+
 ## Shared result page `app/r/[token]/page.tsx`
 
 Server component: verify token (invalid -> friendly error page with CTA). `generateMetadata`
