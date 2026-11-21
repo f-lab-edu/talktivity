@@ -100,6 +100,11 @@ AnalysisResult {
     tips: string[3]
     recommendedLines: string[2-3]
   }
+  partnerTemperature?: {                             // omitted when the partner has < 2 turns
+    level: int 1-5
+    reason: string                  // Korean, 1-80 chars, counts only when source is code
+    source: "llm" | "code"
+  }
 }
 ```
 
@@ -142,6 +147,13 @@ Scores 45-55 are shown as 경계형 in the UI, but the type code is always one c
   `comedian` flag, the roast lines and the reading. Its output schema is strict, so it cannot
   return a type code, L/B or C/M scores or a character. With no model, or after two failed
   attempts, the deterministic fallback scores above are used and `comedian` is false.
+- Partner temperature (`lib/core/partner-temperature.ts`): partner turns are grouped turns whose
+  speaker is not `나`. With fewer than 2 partner turns it is omitted. Otherwise the LLM
+  `partnerTemperature { level, reason }` is used (`source: "llm"`); without a judgment, code sums
+  three signals each capped at 2 - (question + proposal) per partner turn, reaction per turn +
+  expressions per turn, partner median length / my median length - and maps the sum
+  `<1 / <2 / <3 / <4 / >=4` to levels 1-5 (`source: "code"`). The prompt also receives
+  `partnerHints` (counts only). Partner temperature never enters the share token.
 
 ### Confidence
 
@@ -295,15 +307,19 @@ Persist the last result in `sessionStorage` so refresh on the result step keeps 
 3. **LoadingStep**: messages rotate "카톡 말투 감정 분석 중...", "네 가지 말투 축 계산 중...",
    "팩폭 캐릭터 생성 중..." with animation. Minimum display ~2.4s so all three are seen,
    but don't wait longer than the API.
-4. **ResultStep**: the shareable card (emoji/illustration, character name, tagline, 3 roast
-   lines, four animated axis bars, confidence, badges) - contains no conversation text; below it the long
-   reading section (대화 흐름 코멘트, 팁, 추천 대화법); share/save buttons; paywall teaser.
+4. **ResultStep**: the meme card (character illustration, character name, the first roast line
+   large, badges, small type code) - contains no conversation text; the other two roast lines
+   below it; the partner temperature gauge ("상대 대화 온도", 5 steps, reason, link that scrolls to
+   the paid report area) when present; "이렇게 분석했어요" with the four axis bars, confidence and
+   axis reasons; the reading section (대화 흐름 코멘트, 팁, 추천 대화법); share/save buttons;
+   paywall. Save image captures only the meme card.
 5. **Share**: `lib/kakao.ts` loads the SDK via `next/script`, `Kakao.init` once, then
    `Kakao.Share.sendDefault` feed template:
-   - title `[톡티비티] 나 '[캐릭터명]' 나왔어 ㅋㅋㅋ`
-   - description `너는 나랑 카톡할 때 무슨 유형 나올 것 같아? 3초 만에 확인해봐!`
-   - button `나도 무료로 팩폭 분석하기`
-   - imageUrl = absolute URL of the dynamic OG image for this token; link = `/r/[token]`.
+   - title and description from `lib/share-meta.ts` (`[톡티비티] 나 무슨 유형 나왔게? 맞혀 봐`);
+     they never contain the character name or type code
+   - button `맞히러 가기`
+   - imageUrl = absolute URL of the dynamic OG image for this token with `imageWidth` 1200 and
+     `imageHeight` 630; link = `/r/[token]`.
    Also a "링크 복사" button.
    **Save image**: `html-to-image` (dynamic import on click) -> PNG. Prefer
    `navigator.share({ files })` when `canShare` supports files; else `<a download>`; and in
@@ -316,11 +332,14 @@ Persist the last result in `sessionStorage` so refresh on the result step keeps 
 ## Shared result page `app/r/[token]/page.tsx`
 
 Server component: verify token (invalid -> friendly error page with CTA). `generateMetadata`
-sets og:title `[톡티비티] 나 '[캐릭터명]' 나왔어 ㅋㅋㅋ`, og:description, og:image.
-Page shows "친구의 결과" card (character, axes, badges, roast lines, generic description) and a big
-CTA "나도 무료로 팩폭 분석하기" -> `/`. OG image route (e.g. `app/r/[token]/opengraph-image.tsx`
-or `app/api/og/route.tsx`) renders 1200x630 with Pretendard, character name, character SVG, axes.
-Also a default OG image for `/`.
+sets og:title/og:description/alt from `lib/share-meta.ts` without the character name or type code,
+and og:image. The page is a quiz: the first roast line as a hint, four character options from
+`quizOptions(typeCode, token)` (`lib/core/quiz.ts`: deterministic, the answer plus three codes
+1-2 letters away), and "그냥 결과 볼래". Answering or skipping reveals the verdict, the meme card,
+all roast lines, the generic description and the CTA "너는 뭐 나올 것 같아? 3초 만에 확인" -> `/`.
+The OG image (`app/api/og/route.tsx`, 1200x630, Pretendard) is a spoiler-free teaser: a ❓
+silhouette, the first roast line and "이 말투, 무슨 유형일까? 맞혀 봐", all inside the centered
+square safe zone; no character name, code, image or axes. Also a default OG image for `/`.
 
 ## Analytics events (`lib/analytics.ts`)
 
@@ -329,9 +348,14 @@ Also a default OG image for `/`.
 `analyze_submit` ({source: text|screenshot, relationship: preset string|"custom"}), `analyze_success`,
 `analyze_error` ({code}), `result_view`, `share_kakao_click`, `share_link_copy`,
 `image_save` ({method}), `paywall_teaser_click` ({tier: 1000|1900}), `shared_page_view`,
-`shared_page_cta_click`.
+`shared_page_cta_click` ({answered}), `shared_quiz_answer` ({correct}), `shared_quiz_skip`,
+`temperature_fallback` (real analyses whose partner temperature came from code),
+`temperature_detail_click` ({level}).
 
-`result_view` and `shared_page_view` send only `typeCode`, `badges` and each axis as a
+`result_view` additionally sends `partner_temperature` (1-5) and `temperature_source`
+(`llm`|`code`) when the result has a partner temperature.
+
+Both `result_view` and `shared_page_view` send `typeCode`, `badges` and each axis as a
 10-point bucket (`0-9` ... `90-100`). Properties outside the allowlist are dropped.
 `analyze_submit.relationship` preserves only exact preset values; all other relationship
 values become the literal `"custom"`. Custom relationship text is never sent to analytics.
