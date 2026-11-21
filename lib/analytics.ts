@@ -87,7 +87,9 @@ type EventProps = {
   readonly report_generate_error: { readonly code: string };
   readonly report_view: { readonly source: "inline" | "list" };
   readonly shared_page_view: TypeAnalyticsProps;
-  readonly shared_page_cta_click: undefined;
+  readonly shared_page_cta_click: { readonly answered: boolean };
+  readonly shared_quiz_answer: { readonly correct: boolean };
+  readonly shared_quiz_skip: undefined;
 };
 type EventName = keyof EventProps;
 type EventWithProps = {
@@ -129,7 +131,9 @@ const eventPropertyAllowlist = {
   report_generate_error: ["code"],
   report_view: ["source"],
   shared_page_view: ["typeCode", "badges", "direction", "length", "color", "stance"],
-  shared_page_cta_click: [],
+  shared_page_cta_click: ["answered"],
+  shared_quiz_answer: ["correct"],
+  shared_quiz_skip: [],
 } as const satisfies EventPropertyAllowlist;
 
 // Share tokens embed generated copy, so they are masked in every URL-like value the SDK adds.

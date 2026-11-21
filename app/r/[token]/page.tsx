@@ -47,5 +47,5 @@ export default async function SharedPage({ params }: Props) {
         </Button>
       </section>
     );
-  return <SharedResult payload={payload} />;
+  return <SharedResult payload={payload} token={token} />;
 }

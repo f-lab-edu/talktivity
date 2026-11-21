@@ -219,6 +219,35 @@ describe("track 결제·리포트 이벤트", () => {
   });
 });
 
+describe("track 공유 퀴즈 이벤트", () => {
+  it("허용된 속성만 전송한다", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_HOST", "");
+    vi.resetModules();
+    const debug = vi.spyOn(console, "debug").mockImplementation(() => {});
+    try {
+      const { track: freshTrack } = await import("../lib/analytics");
+      const leaked = { typeCode: "OBCG", pick: "RBMG" };
+      Reflect.apply(freshTrack, undefined, ["shared_quiz_answer", { correct: true, ...leaked }]);
+      Reflect.apply(freshTrack, undefined, ["shared_quiz_skip", leaked]);
+      Reflect.apply(freshTrack, undefined, [
+        "shared_page_cta_click",
+        { answered: false, ...leaked },
+      ]);
+      expect(debug.mock.calls).toEqual([
+        ["[분석 이벤트]", "shared_quiz_answer", { correct: true }],
+        ["[분석 이벤트]", "shared_quiz_skip", {}],
+        ["[분석 이벤트]", "shared_page_cta_click", { answered: false }],
+      ]);
+    } finally {
+      debug.mockRestore();
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
+  });
+});
+
 describe("track analyze_submit", () => {
   it.each([
     ["text", "썸", "썸"],
