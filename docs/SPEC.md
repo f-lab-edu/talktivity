@@ -333,7 +333,12 @@ Persist the last result in `sessionStorage` so refresh on the result step keeps 
 
 Static server components `app/privacy`, `app/terms` and `app/refund` (개인정보처리방침, 이용약관,
 환불정책; effective 2026-11-21) share `app/styles/legal.css`. The root layout footer links to all three
-and shows the contact email (hhmmmteam@gmail.com).
+and shows the contact email (hhmmmteam@gmail.com). Seller is the individual "문성재 (Moon Sungjae)"
+(no postal address published); Paddle is the Merchant of Record. Refund rule: unused credits are fully
+refundable within 7 days of purchase; credits spent on a report are withdrawal-restricted (전자상거래법
+제17조 제2항 제5호) unless the content differs from the advertisement (제17조 제3항). The pre-purchase
+notice with a `/refund` link renders under the buy button in `components/paywall-card.tsx` (checkout
+cards only), before checkout opens.
 
 ## Shared result page `app/r/[token]/page.tsx`
 

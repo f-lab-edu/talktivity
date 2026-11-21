@@ -257,6 +257,15 @@
   white-space: nowrap;
   font-size: 12px;
 }
+.checkout-notice {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+  text-align: center;
+}
+.checkout-notice a {
+  text-decoration: underline;
+}
 .restart {
   margin-top: 22px;
 }

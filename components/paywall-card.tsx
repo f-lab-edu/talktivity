@@ -1,6 +1,7 @@
 "use client";
 
 import { LockKeyhole } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { authEnabled } from "@/lib/auth-client";
@@ -104,6 +105,12 @@ export function PaywallCardView({
       <Button className="full-width" disabled={disabled || busy} onClick={() => onClick(card)}>
         {busy ? "잠시만요..." : card.label}
       </Button>
+      {card.action.kind === "checkout" && (
+        <p className="checkout-notice">
+          구매한 크레딧은 7일 이내 사용하지 않으면 전액 환불돼요. 리포트 생성에 사용한 크레딧은
+          청약철회가 제한돼요. <Link href="/refund">환불정책</Link>
+        </p>
+      )}
     </div>
   );
 }
