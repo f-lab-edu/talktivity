@@ -16,7 +16,10 @@ export function loadDraft(): Draft | null {
     const saved = localStorage.getItem(draftKey);
     if (!saved) return null;
     const parsed = draftSchema.safeParse(JSON.parse(saved));
-    return parsed.success ? parsed.data : null;
+    if (!parsed.success) return null;
+    if (parsed.data.source === "screenshot")
+      return { ...parsed.data, source: null, conversation: "", mySpeaker: "" };
+    return parsed.data;
   } catch (error) {
     if (!(error instanceof Error)) throw error;
     return null;
@@ -25,7 +28,14 @@ export function loadDraft(): Draft | null {
 
 export function saveDraft(draft: Draft) {
   try {
-    localStorage.setItem(draftKey, JSON.stringify(draft));
+    localStorage.setItem(
+      draftKey,
+      JSON.stringify(
+        draft.source === "screenshot"
+          ? { ...draft, source: null, conversation: "", mySpeaker: "" }
+          : draft,
+      ),
+    );
   } catch (error) {
     if (!(error instanceof Error)) throw error;
   }

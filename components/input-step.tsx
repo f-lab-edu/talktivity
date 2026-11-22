@@ -1,24 +1,31 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, ImagePlus, LoaderCircle, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, ImagePlus, ShieldCheck } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { RelationshipField } from "@/components/relationship-field";
 import { Button } from "@/components/ui/button";
 import { track } from "@/lib/analytics";
 import { exampleConversation } from "@/lib/core/example";
 import { speakersIn } from "@/lib/core/parse-kakao";
-import { type AnalysisRequest, errorSchema, requestSchema } from "@/lib/core/schema";
+import { type AnalysisRequest, requestSchema } from "@/lib/core/schema";
 import { type Draft, loadDraft, saveDraft } from "@/lib/draft";
-import { compressScreenshot } from "@/lib/screenshot";
 
 const maxScreenshots = 3;
 
+export type ScreenshotSubmission = {
+  readonly files: readonly File[];
+  readonly relationship: string;
+};
+
 export function InputStep({
   onSubmit,
+  onScreenshotsSubmit,
   onBack,
   apiError,
 }: {
-  readonly onSubmit: (request: AnalysisRequest, source: "text" | "screenshot") => void;
+  readonly onSubmit: (request: AnalysisRequest) => void;
+  readonly onScreenshotsSubmit: (submission: ScreenshotSubmission) => void;
   readonly onBack: () => void;
   readonly apiError: string | null;
 }) {
@@ -27,58 +34,48 @@ export function InputStep({
   const [relationship, setRelationship] = useState(initial?.relationship ?? "");
   const [mySpeaker, setMySpeaker] = useState(initial?.mySpeaker ?? "");
   const [source, setSource] = useState<Draft["source"]>(initial?.source ?? null);
-  const [extracting, setExtracting] = useState(false);
+  const [files, setFiles] = useState<readonly File[]>([]);
+  const [previews, setPreviews] = useState<readonly string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const speakers = speakersIn(conversation);
   useEffect(() => {
     saveDraft({ conversation, relationship, mySpeaker, source });
   }, [conversation, relationship, mySpeaker, source]);
+  useEffect(() => {
+    const urls = files.map((file) => URL.createObjectURL(file));
+    setPreviews(urls);
+    return () => {
+      for (const url of urls) URL.revokeObjectURL(url);
+    };
+  }, [files]);
 
-  async function readScreenshots(files: readonly File[]) {
-    if (files.length === 0) return;
-    if (files.length > maxScreenshots) {
+  function selectScreenshots(selected: readonly File[]) {
+    if (selected.length === 0) return;
+    if (selected.length > maxScreenshots) {
       setError(`캡처는 ${maxScreenshots}장까지 올릴 수 있어요.`);
       return;
     }
     setError(null);
-    setExtracting(true);
-    track("extract_submit", { count: files.length });
-    try {
-      const form = new FormData();
-      for (const [index, file] of files.entries())
-        form.append("images", await compressScreenshot(file), `capture-${index + 1}.jpg`);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL ?? ""}/api/extract`, {
-        method: "POST",
-        body: form,
-        signal: AbortSignal.timeout(50_000),
-      });
-      const json: unknown = await response.json();
-      if (!response.ok) {
-        const parsed = errorSchema.safeParse(json);
-        track("extract_error", { code: parsed.success ? parsed.data.error.code : "HTTP_ERROR" });
-        setError(parsed.success ? parsed.data.error.message : "캡처를 읽지 못했어요.");
-        return;
-      }
-      const text =
-        typeof json === "object" && json !== null && "conversation" in json
-          ? json.conversation
-          : null;
-      if (typeof text !== "string") throw new Error("Unexpected extract response");
-      track("extract_success");
-      setConversation(text);
-      setMySpeaker("나");
-      setSource("screenshot");
-    } catch (caught) {
-      if (!(caught instanceof Error)) throw caught;
-      track("extract_error", { code: "CLIENT_ERROR" });
-      setError("캡처를 읽지 못했어요. 다시 올려 주세요.");
-    } finally {
-      setExtracting(false);
-    }
+    setFiles(selected);
+    setSource("screenshot");
   }
 
   function submit() {
+    if (source === "screenshot") {
+      const parsed = requestSchema.shape.relationship.safeParse(relationship);
+      if (!parsed.success) {
+        setError(parsed.error.issues[0]?.message ?? "입력을 확인해 주세요.");
+        return;
+      }
+      if (files.length === 0) {
+        setError("캡처 이미지를 1~3장 올려 주세요.");
+        return;
+      }
+      setError(null);
+      onScreenshotsSubmit({ files, relationship: parsed.data });
+      return;
+    }
     const parsed = requestSchema.safeParse({
       conversation,
       relationship,
@@ -93,7 +90,7 @@ export function InputStep({
       return;
     }
     setError(null);
-    onSubmit(parsed.data, source === "screenshot" ? "screenshot" : "text");
+    onSubmit(parsed.data);
   }
 
   return (
@@ -126,35 +123,39 @@ export function InputStep({
           onChange={(event) => {
             const files = [...(event.target.files ?? [])];
             event.target.value = "";
-            void readScreenshots(files);
+            selectScreenshots(files);
           }}
         />
-        <button
-          type="button"
-          className="upload-card"
-          disabled={extracting}
-          onClick={() => fileInput.current?.click()}
-        >
-          {extracting ? (
-            <>
-              <LoaderCircle size={28} className="spin" />
-              <strong>대화 읽는 중…</strong>
-              <span>10초 정도 걸려요</span>
-            </>
-          ) : (
-            <>
-              <ImagePlus size={28} />
-              <strong>{source === "screenshot" ? "캡처 다시 올리기" : "카톡 캡처 올리기"}</strong>
-              <span>최대 {maxScreenshots}장 · 올린 순서대로 읽어요</span>
-            </>
+        <button type="button" className="upload-card" onClick={() => fileInput.current?.click()}>
+          <ImagePlus size={28} />
+          <strong>{files.length ? `캡처 ${files.length}장 선택됨` : "카톡 캡처 올리기"}</strong>
+          {previews.length > 0 && (
+            <span className="capture-previews">
+              {previews.map((url, index) => (
+                <Image
+                  key={url}
+                  src={url}
+                  alt={`선택한 캡처 ${index + 1}`}
+                  width={64}
+                  height={64}
+                  unoptimized
+                />
+              ))}
+            </span>
           )}
+          <span>
+            {files.length
+              ? "다시 누르면 캡처를 새로 선택할 수 있어요"
+              : `최대 ${maxScreenshots}장 · 올린 순서대로 읽어요`}
+          </span>
         </button>
-        {source === null ? (
+        {source !== "text" ? (
           <button
             type="button"
             className="text-mode-link"
             onClick={() => {
               track("input_mode_text");
+              setFiles([]);
               setSource("text");
             }}
           >
@@ -162,24 +163,18 @@ export function InputStep({
           </button>
         ) : (
           <>
-            <label htmlFor="conversation">
-              {source === "screenshot" ? "읽어 온 대화" : "분석할 대화"}
-            </label>
+            <label htmlFor="conversation">분석할 대화</label>
             <textarea
               id="conversation"
               value={conversation}
               onChange={(event) => setConversation(event.target.value)}
               placeholder={exampleConversation}
               maxLength={1500}
-              rows={source === "screenshot" ? 6 : 8}
+              rows={8}
               aria-describedby="privacy input-error"
             />
             <div className="field-footer">
-              <span>
-                {source === "screenshot"
-                  ? "틀리게 읽은 부분은 고쳐도 돼요"
-                  : "이름과 연락처는 자동으로 가려져요"}
-              </span>
+              <span>이름과 연락처는 자동으로 가려져요</span>
               <span>{conversation.length}/1,500</span>
             </div>
           </>
@@ -211,7 +206,7 @@ export function InputStep({
         <p id="input-error" className="error-message" role="alert">
           {error ?? apiError}
         </p>
-        <Button type="submit" className="full-width" disabled={extracting}>
+        <Button type="submit" className="full-width">
           팩폭 분석 시작하기 <ArrowRight size={18} />
         </Button>
       </form>

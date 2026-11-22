@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useReducer, useRef } from "react";
-import { InputStep } from "@/components/input-step";
+import { InputStep, type ScreenshotSubmission } from "@/components/input-step";
 import { LandingStep } from "@/components/landing-step";
 import { LoadingStep } from "@/components/loading-step";
 import { ResultStep } from "@/components/result-step";
@@ -11,11 +11,13 @@ import {
   type AnalysisRequest,
   errorSchema,
   relationshipAnalyticsValue,
+  requestSchema,
   responseSchema,
 } from "@/lib/core/schema";
 import { clearDraft } from "@/lib/draft";
 import { flowReducer, homeEvent, resultStorageKey, stepStorageKey } from "@/lib/flow";
 import { clearLastRequest, saveLastRequest } from "@/lib/last-request";
+import { compressScreenshot } from "@/lib/screenshot";
 
 export default function Home() {
   const [state, dispatch] = useReducer(flowReducer, { step: "landing" });
@@ -54,28 +56,80 @@ export default function Home() {
       if (!(error instanceof Error)) throw error;
     }
   }, [state.step]);
-  async function run(request?: AnalysisRequest, source: "text" | "screenshot" = "text") {
+  async function run(request?: AnalysisRequest, screenshots?: ScreenshotSubmission) {
     if (activeRequest.current) return;
     const controller = new AbortController();
     activeRequest.current = controller;
-    dispatch({ type: "loading" });
-    if (request)
-      track("analyze_submit", {
-        source,
-        relationship: relationshipAnalyticsValue(request.relationship),
-      });
+    let stage: "extract" | "analyze" = screenshots ? "extract" : "analyze";
+    dispatch({ type: "loading", stage });
     try {
-      const body = request
+      let analysisRequest = request;
+      if (screenshots) {
+        track("extract_submit", { count: screenshots.files.length });
+        const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(50_000)]);
+        const form = new FormData();
+        for (const [index, file] of screenshots.files.entries()) {
+          const image = await compressScreenshot(file);
+          signal.throwIfAborted();
+          form.append("images", image, `capture-${index + 1}.jpg`);
+        }
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL ?? ""}/api/extract`, {
+          method: "POST",
+          body: form,
+          signal,
+        });
+        const json: unknown = await response.json();
+        controller.signal.throwIfAborted();
+        if (!response.ok) {
+          const parsed = errorSchema.safeParse(json);
+          track("extract_error", { code: parsed.success ? parsed.data.error.code : "HTTP_ERROR" });
+          dispatch({
+            type: "error",
+            message: parsed.success ? parsed.data.error.message : "캡처를 읽지 못했어요.",
+          });
+          return;
+        }
+        const conversation =
+          typeof json === "object" && json !== null && "conversation" in json
+            ? json.conversation
+            : null;
+        if (typeof conversation !== "string") throw new Error("Unexpected extract response");
+        track("extract_success");
+        const parsed = requestSchema.safeParse({
+          conversation,
+          relationship: screenshots.relationship,
+          mySpeaker: "나",
+        });
+        if (!parsed.success) {
+          dispatch({
+            type: "error",
+            message: parsed.error.issues[0]?.message ?? "입력을 확인해 주세요.",
+          });
+          return;
+        }
+        analysisRequest = parsed.data;
+        stage = "analyze";
+        dispatch({ type: "loading", stage });
+      }
+      if (analysisRequest)
+        track("analyze_submit", {
+          source: screenshots ? "screenshot" : "text",
+          relationship: relationshipAnalyticsValue(analysisRequest.relationship),
+        });
+      const body = analysisRequest
         ? {
             // Redaction preserves the length that passed input validation.
-            conversation: maskPII(request.conversation).padEnd(request.conversation.length, " "),
-            relationship: request.relationship,
-            ...(request.mySpeaker ? { mySpeaker: request.mySpeaker } : {}),
+            conversation: maskPII(analysisRequest.conversation).padEnd(
+              analysisRequest.conversation.length,
+              " ",
+            ),
+            relationship: analysisRequest.relationship,
+            ...(analysisRequest.mySpeaker ? { mySpeaker: analysisRequest.mySpeaker } : {}),
           }
         : undefined;
       const [response] = await Promise.all([
         fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL ?? ""}/api/${request ? "analyze" : "example"}`,
+          `${process.env.NEXT_PUBLIC_API_BASE_URL ?? ""}/api/${analysisRequest ? "analyze" : "example"}`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -86,6 +140,7 @@ export default function Home() {
         new Promise<void>((resolve) => setTimeout(resolve, 2400)),
       ]);
       const json: unknown = await response.json();
+      controller.signal.throwIfAborted();
       if (!response.ok) {
         const parsed = errorSchema.safeParse(json);
         track("analyze_error", { code: parsed.success ? parsed.data.error.code : "HTTP_ERROR" });
@@ -98,7 +153,7 @@ export default function Home() {
         return;
       }
       const data = responseSchema.parse(json);
-      if (request) {
+      if (analysisRequest) {
         track("analyze_success");
         if (data.result.partnerTemperature?.source === "code") track("temperature_fallback");
         clearDraft();
@@ -115,6 +170,11 @@ export default function Home() {
     } catch (error) {
       if (!(error instanceof Error)) throw error;
       if (controller.signal.aborted) return;
+      if (stage === "extract") {
+        track("extract_error", { code: "CLIENT_ERROR" });
+        dispatch({ type: "error", message: "캡처를 읽지 못했어요. 다시 올려 주세요." });
+        return;
+      }
       track("analyze_error", { code: "NETWORK_ERROR" });
       dispatch({ type: "error", message: "연결이 잠시 끊겼어요. 다시 시도해 주세요." });
     } finally {
@@ -136,15 +196,21 @@ export default function Home() {
         />
       );
     case "input":
-      return (
-        <InputStep
-          onSubmit={(request, source) => void run(request, source)}
-          onBack={() => dispatch({ type: "landing" })}
-          apiError={state.error}
-        />
-      );
     case "loading":
-      return <LoadingStep />;
+      return (
+        <>
+          {/* Keep files and form state in memory while extraction/analysis is running. */}
+          <div hidden={state.step === "loading"}>
+            <InputStep
+              onSubmit={(request) => void run(request)}
+              onScreenshotsSubmit={(screenshots) => void run(undefined, screenshots)}
+              onBack={() => dispatch({ type: "landing" })}
+              apiError={state.step === "input" ? state.error : null}
+            />
+          </div>
+          {state.step === "loading" && <LoadingStep key={state.stage} stage={state.stage} />}
+        </>
+      );
     case "result":
       return (
         <ResultStep

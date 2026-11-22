@@ -4,15 +4,17 @@ export const resultStorageKey = "talktivity:last-result";
 export const stepStorageKey = "talktivity:step";
 export const homeEvent = "talktivity:home";
 
+export type LoadingStage = "extract" | "analyze";
+
 export type FlowState =
   | { readonly step: "landing" }
   | { readonly step: "input"; readonly error: string | null }
-  | { readonly step: "loading" }
+  | { readonly step: "loading"; readonly stage: LoadingStage }
   | { readonly step: "result"; readonly data: AnalysisResponse };
 type Action =
   | { readonly type: "input" }
   | { readonly type: "landing" }
-  | { readonly type: "loading" }
+  | { readonly type: "loading"; readonly stage: LoadingStage }
   | { readonly type: "result"; readonly data: AnalysisResponse }
   | { readonly type: "error"; readonly message: string };
 export function flowReducer(_state: FlowState, action: Action): FlowState {
@@ -22,7 +24,7 @@ export function flowReducer(_state: FlowState, action: Action): FlowState {
     case "landing":
       return { step: "landing" };
     case "loading":
-      return { step: "loading" };
+      return { step: "loading", stage: action.stage };
     case "result":
       return { step: "result", data: action.data };
     case "error":
