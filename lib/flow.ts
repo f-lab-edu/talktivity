@@ -1,5 +1,9 @@
 import type { AnalysisResponse } from "./core/schema";
 
+export const resultStorageKey = "talktivity:last-result";
+export const stepStorageKey = "talktivity:step";
+export const homeEvent = "talktivity:home";
+
 export type FlowState =
   | { readonly step: "landing" }
   | { readonly step: "input"; readonly error: string | null }

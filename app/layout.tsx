@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { HeaderNav } from "@/components/header-nav";
+import { HomeLink } from "@/components/home-link";
 import { Providers } from "@/components/providers";
 import { siteUrl } from "@/lib/site";
 import "./globals.css";
@@ -37,9 +38,7 @@ export default function RootLayout({ children }: { readonly children: ReactNode 
         <Providers>
           <div className="app-shell max-w-[480px] mx-auto">
             <header className="site-header">
-              <Link href="/" className="wordmark">
-                talktivity<span>●</span>
-              </Link>
+              <HomeLink />
               <HeaderNav />
             </header>
             <main id="main">{children}</main>

@@ -14,7 +14,7 @@ import {
   responseSchema,
 } from "@/lib/core/schema";
 import { clearDraft } from "@/lib/draft";
-import { flowReducer } from "@/lib/flow";
+import { flowReducer, homeEvent, resultStorageKey, stepStorageKey } from "@/lib/flow";
 import { clearLastRequest, saveLastRequest } from "@/lib/last-request";
 
 export default function Home() {
@@ -23,11 +23,11 @@ export default function Home() {
   useEffect(() => {
     track("landing_view");
     try {
-      const saved = sessionStorage.getItem("talktivity:last-result");
+      const saved = sessionStorage.getItem(resultStorageKey);
       if (saved) {
         const parsed = responseSchema.safeParse(JSON.parse(saved));
         if (parsed.success) dispatch({ type: "result", data: parsed.data });
-      } else if (sessionStorage.getItem("talktivity:step") === "input") {
+      } else if (sessionStorage.getItem(stepStorageKey) === "input") {
         dispatch({ type: "input" });
       }
     } catch (error) {
@@ -37,11 +37,19 @@ export default function Home() {
     return () => activeRequest.current?.abort();
   }, []);
   useEffect(() => {
+    const goHome = () => {
+      activeRequest.current?.abort();
+      dispatch({ type: "landing" });
+    };
+    window.addEventListener(homeEvent, goHome);
+    return () => window.removeEventListener(homeEvent, goHome);
+  }, []);
+  useEffect(() => {
     if (state.step !== "landing") window.scrollTo(0, 0);
     // Returning from the KakaoTalk app may reload the tab; reopen the input step then.
     try {
-      if (state.step === "input") sessionStorage.setItem("talktivity:step", "input");
-      else if (state.step !== "loading") sessionStorage.removeItem("talktivity:step");
+      if (state.step === "input") sessionStorage.setItem(stepStorageKey, "input");
+      else if (state.step !== "loading") sessionStorage.removeItem(stepStorageKey);
     } catch (error) {
       if (!(error instanceof Error)) throw error;
     }
@@ -100,7 +108,7 @@ export default function Home() {
       if (body) saveLastRequest(body);
       else clearLastRequest();
       try {
-        sessionStorage.setItem("talktivity:last-result", JSON.stringify(data));
+        sessionStorage.setItem(resultStorageKey, JSON.stringify(data));
       } catch (error) {
         if (!(error instanceof Error)) throw error;
       }
@@ -143,7 +151,7 @@ export default function Home() {
           data={state.data}
           onRestart={() => {
             try {
-              sessionStorage.removeItem("talktivity:last-result");
+              sessionStorage.removeItem(resultStorageKey);
             } catch (error) {
               if (!(error instanceof Error)) throw error;
             }
