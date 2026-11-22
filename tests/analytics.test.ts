@@ -289,6 +289,26 @@ describe("track 공유 퀴즈 이벤트", () => {
   });
 });
 
+describe("track 유형 도감 이벤트", () => {
+  it("types_cta_click은 유형 코드만 전송한다", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_HOST", "");
+    vi.resetModules();
+    const debug = vi.spyOn(console, "debug").mockImplementation(() => {});
+    try {
+      const { track: freshTrack } = await import("../lib/analytics");
+      Reflect.apply(freshTrack, undefined, ["types_cta_click", { code: "OBCG", name: "private" }]);
+      expect(debug.mock.calls).toEqual([["[분석 이벤트]", "types_cta_click", { code: "OBCG" }]]);
+    } finally {
+      debug.mockRestore();
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
+  });
+
+});
+
 describe("track analyze_submit", () => {
   it.each([
     ["text", "썸", "썸"],

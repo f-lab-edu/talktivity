@@ -97,6 +97,7 @@ type EventProps = {
   readonly shared_quiz_skip: undefined;
   readonly temperature_fallback: undefined;
   readonly temperature_detail_click: { readonly level: number };
+  readonly types_cta_click: { readonly code: TypeCode };
 };
 type EventName = keyof EventProps;
 type EventWithProps = {
@@ -152,6 +153,7 @@ const eventPropertyAllowlist = {
   shared_quiz_skip: [],
   temperature_fallback: [],
   temperature_detail_click: ["level"],
+  types_cta_click: ["code"],
 } as const satisfies EventPropertyAllowlist;
 
 // Share tokens embed generated copy, so they are masked in every URL-like value the SDK adds.
