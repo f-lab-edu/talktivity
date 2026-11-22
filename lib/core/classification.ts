@@ -67,7 +67,7 @@ export type ClassificationResult = {
 // Match a whole emoji sequence (including flags, keycaps, modifiers and ZWJ families).
 const emojiSource =
   "(?:\\p{Regional_Indicator}{2}|[#*0-9]\\uFE0F?\\u20E3|\\p{Extended_Pictographic}(?:\\uFE0F|\\p{Emoji_Modifier})*(?:\\u200D\\p{Extended_Pictographic}(?:\\uFE0F|\\p{Emoji_Modifier})*)*)";
-const emojiPattern = new RegExp(`${emojiSource}|\\[이모티콘\\]`, "gu");
+const emojiPattern = new RegExp(`${emojiSource}|\\[이모티콘(?::[^\\]]*)?\\]`, "gu");
 const expressionPattern = new RegExp(
   `${emojiPattern.source}|[ㅋㅎㅠㅜ]{2,}|[!?~]{2,}|(?<![가-힣])(?:우와|와우|와|헐|대박|아싸|좋아|고마워요?|미안|슬퍼|행복해|사랑해|신나)(?![가-힣])`,
   "gu",
@@ -83,7 +83,11 @@ const hintPatterns = {
 } as const;
 
 export function normalizeAnalyzedText(text: string): string {
-  return text.normalize("NFC").replace(/\s+/gu, " ").trim();
+  return text
+    .normalize("NFC")
+    .replace(/\[(사진|이모티콘):[^\]]*\]/gu, "[$1]")
+    .replace(/\s+/gu, " ")
+    .trim();
 }
 
 export function groupTurns(messages: readonly Message[]): readonly Message[] {
@@ -111,8 +115,13 @@ export function medianLength(turns: readonly Message[]): number {
   const lengths = turns
     .map(
       (turn) =>
-        [...normalizeAnalyzedText(turn.text.normalize("NFC").replace(expressionPattern, ""))]
-          .length,
+        [
+          ...normalizeAnalyzedText(
+            normalizeAnalyzedText(turn.text)
+              .replace(expressionPattern, "")
+              .replace(/\[사진\]/gu, ""),
+          ),
+        ].length,
     )
     .sort((a, b) => a - b);
   const middle = Math.floor(lengths.length / 2);
@@ -126,7 +135,8 @@ export function lengthRawScore(turns: readonly Message[]): number {
 
 export function expressionsPerTurn(turns: readonly Message[]): number {
   const count = turns.reduce(
-    (total, turn) => total + [...turn.text.normalize("NFC").matchAll(expressionPattern)].length,
+    (total, turn) =>
+      total + [...normalizeAnalyzedText(turn.text).matchAll(expressionPattern)].length,
     0,
   );
   return turns.length ? count / turns.length : 0;
@@ -227,7 +237,9 @@ export function classifyConfidence(
 }
 
 export function hasEmojiBadge(turns: readonly Message[]): boolean {
-  const counts = turns.map((turn) => [...turn.text.matchAll(emojiPattern)].length);
+  const counts = turns.map(
+    (turn) => [...normalizeAnalyzedText(turn.text).matchAll(emojiPattern)].length,
+  );
   return (
     counts.reduce((total, count) => total + count, 0) >= 2 ||
     (turns.length > 0 && counts.filter((count) => count > 0).length / turns.length >= 0.5)

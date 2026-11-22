@@ -13,19 +13,33 @@ const maxConversationLength = 1500;
 const extractionSchema = z.object({
   isKakaoChat: z.boolean(),
   messages: z
-    .array(z.object({ speaker: z.enum(["나", "상대"]), text: z.string().max(300) }))
+    .array(
+      z.object({
+        speaker: z.enum(["나", "상대"]),
+        text: z.string().max(300),
+        time: z.string().max(20).optional(),
+        date: z.string().max(20).optional(),
+      }),
+    )
     .max(80),
 });
 
 export function latestConversationWithinLimit(
-  messages: readonly { speaker: string; text: string }[],
+  messages: readonly {
+    readonly speaker: string;
+    readonly text: string;
+    readonly time?: string | undefined;
+    readonly date?: string | undefined;
+  }[],
 ): string {
   const lines: string[] = [];
   let length = 0;
   for (const message of [...messages].reverse()) {
     const text = maskPII(message.text.replace(/\s+/g, " ").trim());
     if (!text) continue;
-    const line = `${message.speaker}: ${text}`;
+    const line = message.time
+      ? `[${message.speaker}] [${message.date ? `${message.date} ` : ""}${message.time}] ${text}`
+      : `${message.speaker}: ${text}`;
     const added = line.length + (lines.length ? 1 : 0);
     if (length + added > maxConversationLength) break;
     lines.unshift(line);

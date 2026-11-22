@@ -19,7 +19,9 @@ export function prepareConversation(input: string, mySpeaker?: string): string {
       let body = message.text;
       for (const name of names) body = body.replaceAll(name, name === mySpeaker ? "나" : "상대");
       const label = message.speaker ? (message.speaker === mySpeaker ? "나" : "상대") : "대화";
-      return `${label}: ${maskPII(body)}`;
+      return message.time
+        ? `[${label}] [${message.time}] ${maskPII(body)}`
+        : `${label}: ${maskPII(body)}`;
     })
     .join("\n");
 }
