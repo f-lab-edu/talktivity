@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { HeaderNav } from "@/components/header-nav";
 import { Providers } from "@/components/providers";
 import { siteUrl } from "@/lib/site";
 import "./globals.css";
@@ -39,11 +40,12 @@ export default function RootLayout({ children }: { readonly children: ReactNode 
               <Link href="/" className="wordmark">
                 talktivity<span>●</span>
               </Link>
-              <span className="header-label">톡으로 보는 나</span>
+              <HeaderNav />
             </header>
             <main id="main">{children}</main>
             <footer className="site-footer">
               <nav aria-label="정책">
+                <Link href="/types">유형 도감</Link>
                 <Link href="/privacy">개인정보처리방침</Link>
                 <Link href="/terms">이용약관</Link>
                 <Link href="/refund">환불정책</Link>

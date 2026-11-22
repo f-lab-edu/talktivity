@@ -307,6 +307,27 @@ describe("track 유형 도감 이벤트", () => {
     }
   });
 
+  it("types_entry_click은 진입 위치만 전송한다", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_HOST", "");
+    vi.resetModules();
+    const debug = vi.spyOn(console, "debug").mockImplementation(() => {});
+    try {
+      const { track: freshTrack } = await import("../lib/analytics");
+      for (const source of ["header", "result", "landing"])
+        Reflect.apply(freshTrack, undefined, ["types_entry_click", { source, code: "OBCG" }]);
+      expect(debug.mock.calls).toEqual([
+        ["[분석 이벤트]", "types_entry_click", { source: "header" }],
+        ["[분석 이벤트]", "types_entry_click", { source: "result" }],
+        ["[분석 이벤트]", "types_entry_click", { source: "landing" }],
+      ]);
+    } finally {
+      debug.mockRestore();
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
+  });
 });
 
 describe("track analyze_submit", () => {

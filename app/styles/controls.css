@@ -62,6 +62,16 @@
 .landing-actions .button-primary small {
   width: 100%;
 }
+.text-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  color: #59634c;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .full-width {
   width: 100%;
 }

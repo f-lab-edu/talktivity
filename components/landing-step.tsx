@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight, MessageCircle, Sparkles } from "lucide-react";
+import { TypesEntryLink } from "@/components/types-entry-link";
 import { Button } from "@/components/ui/button";
 
 export function LandingStep({
@@ -52,6 +53,9 @@ export function LandingStep({
         <i />
         <span>대화 저장 안 함</span>
       </div>
+      <TypesEntryLink source="landing" href="/types" className="text-link">
+        16가지 유형 먼저 구경하기
+      </TypesEntryLink>
       <div className="landing-actions">
         <Button onClick={onStart}>
           무료로 내 톡 팩폭 보기 <ArrowRight size={18} />

@@ -107,6 +107,9 @@ export function SharedResult({
               너는 뭐 나올 것 같아? 3초 만에 확인 <ArrowRight size={18} />
             </Link>
           </Button>
+          <Link href="/types" className="text-link">
+            다른 유형도 구경하기
+          </Link>
           <p className="privacy center">가입 없이, 내 대화는 저장 없이.</p>
         </>
       )}

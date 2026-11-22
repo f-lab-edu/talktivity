@@ -86,9 +86,25 @@ textarea:focus-visible {
   font-size: 12px;
   margin-left: 3px;
 }
-.header-label {
-  color: var(--muted);
-  font-size: 12px;
+.header-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1.5px solid var(--foreground);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--foreground);
+  font-size: 14px;
+  font-weight: 700;
+  transition: transform 0.15s;
+}
+.header-link:active {
+  transform: translateY(1px);
+}
+.header-link[aria-current="page"] {
+  background: var(--accent);
 }
 .site-footer {
   color: var(--muted);

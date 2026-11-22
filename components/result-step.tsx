@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, Download, Info, MessageCircle, RotateCcw } from "lucide-react";
+import { BookOpen, Copy, Download, Info, MessageCircle, RotateCcw } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useId, useRef, useState } from "react";
 import { AxisBars } from "@/components/axis-bars";
@@ -8,6 +8,7 @@ import { PartnerTemperature } from "@/components/partner-temperature";
 import { ResultCard } from "@/components/result-card";
 import { ResultPaywall } from "@/components/result-paywall";
 import { RoastRest } from "@/components/roast-rest";
+import { TypesEntryLink } from "@/components/types-entry-link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -132,6 +133,11 @@ export function ResultStep({
       <div ref={card}>
         <ResultCard payload={payload} />
       </div>
+      <Button asChild variant="outline" className="full-width types-entry-button">
+        <TypesEntryLink source="result" href={`/types/${data.result.typeCode}`}>
+          <BookOpen size={17} aria-hidden="true" />내 유형 도감에서 자세히 보기
+        </TypesEntryLink>
+      </Button>
       <RoastRest roastLines={payload.roastLines} />
       {data.result.partnerTemperature && (
         <PartnerTemperature temperature={data.result.partnerTemperature} />
