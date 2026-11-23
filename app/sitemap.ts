@@ -4,6 +4,7 @@ import { siteUrl } from "@/lib/site";
 
 const paths = [
   "/",
+  "/pricing",
   "/types",
   ...typeCodes.map((code) => `/types/${code}`),
   "/privacy",

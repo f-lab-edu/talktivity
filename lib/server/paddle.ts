@@ -52,6 +52,11 @@ const priceCache = new Map<
 export async function purchaseProducts(userId: string) {
   const config = paddleConfig();
   if (!config || !userCanPurchase(userId, config.environment)) return [];
+  return pricedCatalog();
+}
+export async function pricedCatalog() {
+  const config = paddleConfig();
+  if (!config) return [];
   const products = (await billingCatalog()).filter((product) => product.active);
   const priced = await Promise.all(
     products.map(async (product) => {

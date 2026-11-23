@@ -44,6 +44,7 @@ export default function RootLayout({ children }: { readonly children: ReactNode 
             <main id="main">{children}</main>
             <footer className="site-footer">
               <nav aria-label="정책">
+                <Link href="/pricing">요금 안내</Link>
                 <Link href="/types">유형 도감</Link>
                 <Link href="/privacy">개인정보처리방침</Link>
                 <Link href="/terms">이용약관</Link>

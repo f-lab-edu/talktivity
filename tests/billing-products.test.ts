@@ -19,6 +19,26 @@ function servePrices() {
 }
 
 describe("구매 가능 상품", () => {
+  it("공개 목록은 구매 제한과 무관하며 비활성 상품과 가격 조회 실패를 제외한다", async () => {
+    vi.stubEnv("BILLING_TEST_USER_IDS", "");
+    wire.products = [
+      { price_id: priceId, name: "정상", credits: 1, active: true },
+      { price_id: secondPrice, name: "조회 실패", credits: 5, active: true },
+      { price_id: "pri_00000000000000000000000002", name: "중지", credits: 10, active: false },
+    ];
+    wire.respond = (request) =>
+      request.url.endsWith(`/prices/${priceId}`)
+        ? price("4900")
+        : new Response(null, { status: 503 });
+    const { pricedCatalog, purchaseProducts } = await import("../lib/server/paddle");
+
+    expect(await purchaseProducts(userId)).toEqual([]);
+    expect(wire.requests).toHaveLength(0);
+    expect(await pricedCatalog()).toEqual([
+      { priceId, name: "정상", credits: 1, amount: 4900, currency: "KRW" },
+    ]);
+    expect(wire.requests.filter((request) => request.url.includes("/prices/"))).toHaveLength(2);
+  });
   it("활성 상품만 정렬된 DB 순서로 가격과 잔액을 반환한다", async () => {
     wire.products = [
       { price_id: secondPrice, name: "작은 팩", credits: 1, active: true },
@@ -50,6 +70,8 @@ describe("구매 가능 상품", () => {
   });
   it("가격은 상품별로 10분간 캐시하고 만료 시 다시 조회한다", async () => {
     servePrices();
+    const { pricedCatalog } = await import("../lib/server/paddle");
+    await pricedCatalog();
     const { GET } = await import("../app/api/credits/route");
     await GET(authenticatedRequest("/api/credits"));
     vi.advanceTimersByTime(599_999);
@@ -67,6 +89,9 @@ describe("구매 가능 상품", () => {
     async (name) => {
       vi.stubEnv(name, "");
       servePrices();
+      const { pricedCatalog } = await import("../lib/server/paddle");
+      expect(await pricedCatalog()).toEqual([]);
+      expect(wire.requests).toHaveLength(0);
       const { GET } = await import("../app/api/credits/route");
       const response = await GET(authenticatedRequest("/api/credits"));
       expect(await response.json()).toEqual({ balance: 2, products: [] });

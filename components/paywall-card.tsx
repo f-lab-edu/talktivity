@@ -7,10 +7,7 @@ import { Button } from "@/components/ui/button";
 import { authEnabled } from "@/lib/auth-client";
 import type { Product } from "@/lib/billing-client";
 import { checkoutAvailable } from "@/lib/paddle";
-import { formatPrice } from "@/lib/purchase";
-
-const reportTitle = "상대방 속마음 정밀 리포트 + 맞춤 답장 3개";
-const fallbackTier = 4900;
+import { fallbackTier, formatPrice, reportTitle } from "@/lib/purchase";
 
 export type CardAction =
   | { readonly kind: "report" }
@@ -108,7 +105,8 @@ export function PaywallCardView({
       {card.action.kind === "checkout" && (
         <p className="checkout-notice">
           구매한 크레딧은 7일 이내 사용하지 않으면 전액 환불돼요. 리포트 생성에 사용한 크레딧은
-          청약철회가 제한돼요. <Link href="/refund">환불정책</Link>
+          청약철회가 제한돼요. <Link href="/pricing">요금 안내</Link> ·{" "}
+          <Link href="/refund">환불정책</Link>
         </p>
       )}
     </div>
