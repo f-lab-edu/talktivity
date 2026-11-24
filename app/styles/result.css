@@ -204,6 +204,7 @@
 .share-actions {
   display: grid;
   gap: 10px;
+  margin-top: 28px;
 }
 .two-buttons {
   display: grid;
