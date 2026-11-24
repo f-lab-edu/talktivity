@@ -358,7 +358,8 @@ square safe zone; no character name, code, image or axes. Also a default OG imag
 ## Analytics events (`lib/analytics.ts`)
 
 `landing_view` (only when the landing step is shown, not when input/result is restored),
-`cta_click` ({variant: main|example}), `input_mode_text`, `capture_select` ({count: valid images
+`cta_click` ({variant: main|example}), `input_view` (the input step opened by a button: landing
+main CTA, type guide CTA or "다시 하기"; not on reload restore), `input_mode_text`, `capture_select` ({count: valid images
 selected, 1-3}), `extract_submit`
 ({count}), `extract_success`, `extract_error` ({code}),
 `analyze_submit` ({source: text|screenshot, relationship: preset string|"custom"}), `analyze_success`,
@@ -373,6 +374,11 @@ selected, 1-3}), `extract_submit`
 Register it on arrival and every PostHog initialization so all subsequent events retain
 attribution across reloads. Direct visits keep the stored value; invalid values are ignored.
 PostHog persistence remains `memory`; no analytics identifier is stored.
+`start` is a second tab-scoped super property for the button that started the current run
+(`landing`|`types`|`restart`|`example`), stored in `sessionStorage["talktivity:start"]` when
+the button is pressed and registered the same way, so every later event (capture, extract,
+analyze, result, share, paywall) can be split by `entry` x `start`. The expired share link page CTA
+also uses `?from=shared`.
 The type guide CTA links to `/?from=types&step=input`: `step=input` opens the input step directly
 (clearing any stored result, no `landing_view`) and is removed from the URL as well.
 

@@ -43,7 +43,7 @@ export default async function SharedPage({ params }: Props) {
           <br />내 톡 캐릭터를 직접 만나 볼까요?
         </p>
         <Button asChild>
-          <Link href="/">나도 무료로 팩폭 분석하기</Link>
+          <Link href="/?from=shared">나도 무료로 팩폭 분석하기</Link>
         </Button>
       </section>
     );

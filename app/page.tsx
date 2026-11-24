@@ -5,7 +5,7 @@ import { InputStep, type ScreenshotSubmission } from "@/components/input-step";
 import { LandingStep } from "@/components/landing-step";
 import { LoadingStep } from "@/components/loading-step";
 import { ResultStep } from "@/components/result-step";
-import { consumeLandingQuery, track } from "@/lib/analytics";
+import { type AnalysisStart, consumeLandingQuery, markStart, track } from "@/lib/analytics";
 import { maskPII } from "@/lib/core/mask";
 import {
   type AnalysisRequest,
@@ -36,6 +36,12 @@ function clearResult() {
   clearLastRequest();
 }
 
+// The common first step of the analysis funnel, whichever button opened the input step.
+function startAnalysis(start: AnalysisStart) {
+  markStart(start);
+  track("input_view");
+}
+
 export default function Home() {
   const [state, dispatch] = useReducer(flowReducer, { step: "landing" });
   const activeRequest = useRef<AbortController | null>(null);
@@ -43,6 +49,7 @@ export default function Home() {
     // The type guide's CTA links here with `step=input` to skip the landing step.
     if (consumeLandingQuery().openInput) {
       clearResult();
+      startAnalysis("types");
       dispatch({ type: "input" });
       return () => activeRequest.current?.abort();
     }
@@ -210,9 +217,11 @@ export default function Home() {
         <LandingStep
           onStart={() => {
             track("cta_click", { variant: "main" });
+            startAnalysis("landing");
             dispatch({ type: "input" });
           }}
           onExample={() => {
+            markStart("example");
             track("cta_click", { variant: "example" });
             void run();
           }}
@@ -241,6 +250,7 @@ export default function Home() {
           origin={state.origin}
           onRestart={() => {
             clearResult();
+            startAnalysis("restart");
             dispatch({ type: "input" });
           }}
         />

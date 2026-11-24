@@ -63,6 +63,7 @@ type ResultViewProps = TypeAnalyticsProps & {
 type EventProps = {
   readonly landing_view: undefined;
   readonly cta_click: { readonly variant: "main" | "example" };
+  readonly input_view: undefined;
   readonly input_mode_text: undefined;
   readonly capture_select: { readonly count: number };
   readonly extract_submit: { readonly count: number };
@@ -116,6 +117,7 @@ type EventPropertyAllowlist = {
 const eventPropertyAllowlist = {
   landing_view: [],
   cta_click: ["variant"],
+  input_view: [],
   input_mode_text: [],
   capture_select: ["count"],
   extract_submit: ["count"],
@@ -193,14 +195,39 @@ function parseEntry(value: string | null): "shared" | "types" | undefined {
   return value === "shared" || value === "types" ? value : undefined;
 }
 
-function storedEntry(): "shared" | "types" | undefined {
-  if (typeof window === "undefined") return undefined;
+const startStorageKey = "talktivity:start";
+
+// Which button started the current analysis run.
+export type AnalysisStart = "landing" | "types" | "restart" | "example";
+const analysisStarts: readonly AnalysisStart[] = ["landing", "types", "restart", "example"];
+
+function parseStart(value: string | null): AnalysisStart | undefined {
+  return analysisStarts.find((start) => start === value);
+}
+
+// Blocked storage (Safari private mode) throws a DOMException; attribution is then skipped.
+function readSession(key: string): string | null {
+  if (typeof window === "undefined") return null;
   try {
-    return parseEntry(window.sessionStorage.getItem(entryStorageKey));
+    return window.sessionStorage.getItem(key);
   } catch (error) {
-    if (error instanceof DOMException) return undefined;
+    if (error instanceof DOMException) return null;
     throw error;
   }
+}
+
+function writeSession(key: string, value: string): void {
+  try {
+    window.sessionStorage.setItem(key, value);
+  } catch (error) {
+    if (!(error instanceof DOMException)) throw error;
+  }
+}
+
+// Every later event in this tab carries `start`, across reloads, until the next run overwrites it.
+export function markStart(start: AnalysisStart): void {
+  writeSession(startStorageKey, start);
+  if (client) void client.then((posthog) => posthog.register({ start }));
 }
 
 // Called on the landing route, including SPA arrivals after the SDK has initialized. A valid
@@ -210,11 +237,7 @@ export function consumeLandingQuery(): { readonly openInput: boolean } {
   const entry = parseEntry(url.searchParams.get("from"));
   const openInput = url.searchParams.get("step") === "input";
   if (entry) {
-    try {
-      window.sessionStorage.setItem(entryStorageKey, entry);
-    } catch (error) {
-      if (!(error instanceof DOMException)) throw error;
-    }
+    writeSession(entryStorageKey, entry);
     url.searchParams.delete("from");
     if (client) void client.then((posthog) => posthog.register({ entry }));
   }
@@ -265,8 +288,10 @@ const client =
           before_send: redactShareTokens,
         });
         if (resolveInternalTraffic()) posthog.register({ internal: true });
-        const entry = storedEntry();
+        const entry = parseEntry(readSession(entryStorageKey));
         if (entry) posthog.register({ entry });
+        const start = parseStart(readSession(startStorageKey));
+        if (start) posthog.register({ start });
         return posthog;
       })
     : null;

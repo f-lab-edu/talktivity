@@ -121,6 +121,78 @@ describe("entry attribution", () => {
   });
 });
 
+describe("analysis start attribution", () => {
+  it("stores and registers the start button, and re-registers it after a reload", async () => {
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "test-key");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_HOST", "https://analytics.example");
+    vi.resetModules();
+    const stored = new Map<string, string>([["talktivity:start", "landing"]]);
+    const posthog = {
+      init: vi.fn(),
+      register: vi.fn(),
+      capture: vi.fn(),
+      get_distinct_id: () => "id",
+    };
+    vi.doMock("posthog-js", () => ({ default: posthog }));
+    vi.stubGlobal("window", {
+      location: new URL("https://talktivity.example/"),
+      sessionStorage: {
+        getItem: (key: string) => stored.get(key) ?? null,
+        setItem: (key: string, value: string) => stored.set(key, value),
+      },
+      localStorage: { getItem: () => null },
+    });
+    try {
+      const analytics = await import("../lib/analytics");
+      await analytics.analyticsDistinctId();
+      expect(posthog.register).toHaveBeenCalledWith({ start: "landing" });
+
+      analytics.markStart("restart");
+      analytics.track("input_view");
+      await analytics.analyticsDistinctId();
+      expect(stored.get("talktivity:start")).toBe("restart");
+      expect(posthog.register).toHaveBeenLastCalledWith({ start: "restart" });
+      expect(posthog.register.mock.invocationCallOrder.at(-1)).toBeLessThan(
+        posthog.capture.mock.invocationCallOrder.at(-1) ?? 0,
+      );
+      expect(posthog.capture).toHaveBeenLastCalledWith("input_view", undefined);
+    } finally {
+      vi.doUnmock("posthog-js");
+      vi.unstubAllGlobals();
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
+  });
+
+  it("ignores an unknown stored start", async () => {
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "test-key");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_HOST", "https://analytics.example");
+    vi.resetModules();
+    const posthog = {
+      init: vi.fn(),
+      register: vi.fn(),
+      capture: vi.fn(),
+      get_distinct_id: () => "id",
+    };
+    vi.doMock("posthog-js", () => ({ default: posthog }));
+    vi.stubGlobal("window", {
+      location: new URL("https://talktivity.example/"),
+      sessionStorage: { getItem: (key: string) => (key === "talktivity:start" ? "share" : null) },
+      localStorage: { getItem: () => null },
+    });
+    try {
+      const analytics = await import("../lib/analytics");
+      await analytics.analyticsDistinctId();
+      expect(posthog.register).not.toHaveBeenCalled();
+    } finally {
+      vi.doUnmock("posthog-js");
+      vi.unstubAllGlobals();
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
+  });
+});
+
 describe("restored funnel state", () => {
   const data = { result: exampleResult, shareToken: "test-token" };
 
