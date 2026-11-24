@@ -18,6 +18,7 @@ import { getCharacter } from "@/lib/core/characters";
 import { axisIds, type Confidence } from "@/lib/core/classification";
 import type { AnalysisResponse } from "@/lib/core/schema";
 import { sharePayloadFromResult } from "@/lib/core/share-token";
+import type { ResultOrigin } from "@/lib/flow";
 import { shareKakao } from "@/lib/kakao";
 import { imageUrl, resultUrl } from "@/lib/site";
 
@@ -29,9 +30,11 @@ const confidenceLabels: Readonly<Record<Confidence, string>> = {
 
 export function ResultStep({
   data,
+  origin,
   onRestart,
 }: {
   readonly data: AnalysisResponse;
+  readonly origin: ResultOrigin;
   readonly onRestart: () => void;
 }) {
   const card = useRef<HTMLDivElement>(null);
@@ -46,6 +49,7 @@ export function ResultStep({
   const temperatureSource = data.result.partnerTemperature?.source;
   useEffect(() => {
     track("result_view", {
+      origin,
       ...typeAnalyticsProps({
         typeCode: data.result.typeCode,
         axes: data.result.axes,
@@ -59,6 +63,7 @@ export function ResultStep({
     data.result.axes,
     data.result.badges,
     data.result.typeCode,
+    origin,
     temperatureLevel,
     temperatureSource,
   ]);

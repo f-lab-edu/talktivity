@@ -156,6 +156,7 @@ export function InputStep({
     setError(null);
     setFiles(selected);
     setSource("screenshot");
+    track("capture_select", { count: selected.length });
   }
 
   function submit() {

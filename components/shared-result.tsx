@@ -101,7 +101,7 @@ export function SharedResult({
           <p className="shared-description">{character.description}</p>
           <Button asChild className="full-width">
             <Link
-              href="/"
+              href="/?from=shared"
               onClick={() => track("shared_page_cta_click", { answered: pick !== null })}
             >
               너는 뭐 나올 것 같아? 3초 만에 확인 <ArrowRight size={18} />

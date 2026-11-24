@@ -9,7 +9,7 @@ import type { TypeCode } from "@/lib/core/classification";
 export function TypesCta({ code }: { readonly code: TypeCode }) {
   return (
     <Button asChild className="full-width">
-      <Link href="/" onClick={() => track("types_cta_click", { code })}>
+      <Link href="/?from=types" onClick={() => track("types_cta_click", { code })}>
         내 유형 알아보기 <ArrowRight size={18} />
       </Link>
     </Button>

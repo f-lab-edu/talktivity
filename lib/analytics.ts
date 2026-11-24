@@ -2,6 +2,7 @@
 
 import type { AxisScores, BadgeId, TypeCode } from "@/lib/core/classification";
 import type { relationshipAnalyticsValue } from "@/lib/core/schema";
+import type { ResultOrigin } from "@/lib/flow";
 
 export type AxisBucket =
   | "0-9"
@@ -54,6 +55,7 @@ export function typeAnalyticsProps(input: {
 }
 
 type ResultViewProps = TypeAnalyticsProps & {
+  readonly origin?: ResultOrigin;
   readonly partner_temperature?: number;
   readonly temperature_source?: "llm" | "code";
 };
@@ -62,6 +64,7 @@ type EventProps = {
   readonly landing_view: undefined;
   readonly cta_click: { readonly variant: "main" | "example" };
   readonly input_mode_text: undefined;
+  readonly capture_select: { readonly count: number };
   readonly extract_submit: { readonly count: number };
   readonly extract_success: undefined;
   readonly extract_error: { readonly code: string };
@@ -114,6 +117,7 @@ const eventPropertyAllowlist = {
   landing_view: [],
   cta_click: ["variant"],
   input_mode_text: [],
+  capture_select: ["count"],
   extract_submit: ["count"],
   extract_success: [],
   extract_error: ["code"],
@@ -121,6 +125,7 @@ const eventPropertyAllowlist = {
   analyze_success: [],
   analyze_error: ["code"],
   result_view: [
+    "origin",
     "typeCode",
     "badges",
     "direction",
@@ -182,6 +187,36 @@ export function redactShareTokens<
 }
 
 const internalStorageKey = "talktivity:internal";
+const entryStorageKey = "talktivity:entry";
+
+function parseEntry(value: string | null): "shared" | "types" | undefined {
+  return value === "shared" || value === "types" ? value : undefined;
+}
+
+function storedEntry(): "shared" | "types" | undefined {
+  if (typeof window === "undefined") return undefined;
+  try {
+    return parseEntry(window.sessionStorage.getItem(entryStorageKey));
+  } catch (error) {
+    if (error instanceof DOMException) return undefined;
+    throw error;
+  }
+}
+
+// Called on the landing route, including SPA arrivals after the SDK has initialized.
+export function captureEntry(): void {
+  const url = new URL(window.location.href);
+  const entry = parseEntry(url.searchParams.get("from"));
+  if (!entry) return;
+  try {
+    window.sessionStorage.setItem(entryStorageKey, entry);
+  } catch (error) {
+    if (!(error instanceof DOMException)) throw error;
+  }
+  url.searchParams.delete("from");
+  window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+  if (client) void client.then((posthog) => posthog.register({ entry }));
+}
 
 // `?internal=1` marks this device as internal, `?internal=0` clears it, anything else keeps the stored state.
 export function nextInternalFlag(search: string, stored: boolean): boolean {
@@ -220,6 +255,8 @@ const client =
           before_send: redactShareTokens,
         });
         if (resolveInternalTraffic()) posthog.register({ internal: true });
+        const entry = storedEntry();
+        if (entry) posthog.register({ entry });
         return posthog;
       })
     : null;

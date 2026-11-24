@@ -7,7 +7,120 @@ import {
   typeAnalyticsProps,
 } from "../lib/analytics";
 import type { AxisScores, BadgeId, TypeCode } from "../lib/core/classification";
+import { exampleResult } from "../lib/core/example";
 import { relationshipAnalyticsValue } from "../lib/core/schema";
+import { flowReducer, restoreFlow } from "../lib/flow";
+
+describe("entry attribution", () => {
+  it.each([
+    ["before", "shared", "types"],
+    ["after", "shared", "types"],
+    ["before", "types", "shared"],
+    ["after", "types", "shared"],
+  ] as const)(
+    "registers %s initialization with entry %s replacing %s, including reload",
+    async (timing, entry, previous) => {
+      vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "test-key");
+      vi.stubEnv("NEXT_PUBLIC_POSTHOG_HOST", "https://analytics.example");
+      vi.resetModules();
+      const stored = new Map<string, string>([["talktivity:entry", previous]]);
+      const posthog = {
+        init: vi.fn(),
+        register: vi.fn(),
+        capture: vi.fn(),
+        get_distinct_id: () => "test-id",
+      };
+      vi.doMock("posthog-js", () => ({ default: posthog }));
+      const history = { state: { preserved: true }, replaceState: vi.fn() };
+      const location = new URL(`https://talktivity.example/?utm=kakao&from=${entry}#start`);
+      vi.stubGlobal("window", {
+        location,
+        history,
+        sessionStorage: {
+          getItem: (key: string) => stored.get(key) ?? null,
+          setItem: (key: string, value: string) => stored.set(key, value),
+        },
+        localStorage: { getItem: () => null },
+      });
+      try {
+        const analytics = await import("../lib/analytics");
+        if (timing === "after") await analytics.analyticsDistinctId();
+        analytics.captureEntry();
+        analytics.track("landing_view");
+        await analytics.analyticsDistinctId();
+        expect(stored.get("talktivity:entry")).toBe(entry);
+        expect(history.replaceState).toHaveBeenCalledWith(history.state, "", "/?utm=kakao#start");
+        expect(posthog.register).toHaveBeenLastCalledWith({ entry });
+        expect(posthog.register.mock.invocationCallOrder.at(-1)).toBeLessThan(
+          posthog.capture.mock.invocationCallOrder[0] ?? 0,
+        );
+
+        posthog.register.mockClear();
+        location.search = "";
+        vi.resetModules();
+        const reloaded = await import("../lib/analytics");
+        await reloaded.analyticsDistinctId();
+        expect(posthog.register).toHaveBeenCalledWith({ entry });
+        expect(posthog.init).toHaveBeenLastCalledWith(
+          "test-key",
+          expect.objectContaining({ persistence: "memory" }),
+        );
+      } finally {
+        vi.doUnmock("posthog-js");
+        vi.unstubAllGlobals();
+        vi.unstubAllEnvs();
+        vi.resetModules();
+      }
+    },
+  );
+
+  it.each(["", "unknown", "shared-token"])("ignores invalid from=%s", async (value) => {
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_HOST", "");
+    vi.resetModules();
+    const setItem = vi.fn();
+    const replaceState = vi.fn();
+    vi.stubGlobal("window", {
+      location: new URL(`https://talktivity.example/?from=${value}#keep`),
+      sessionStorage: { setItem },
+      history: { replaceState },
+    });
+    try {
+      const { captureEntry } = await import("../lib/analytics");
+      captureEntry();
+      expect(setItem).not.toHaveBeenCalled();
+      expect(replaceState).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllGlobals();
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
+  });
+});
+
+describe("restored funnel state", () => {
+  const data = { result: exampleResult, shareToken: "test-token" };
+
+  it.each([
+    [JSON.stringify(data), null, "result"],
+    [null, "input", "input"],
+    [null, null, "landing"],
+    ["invalid JSON", null, "landing"],
+    ["{}", null, "landing"],
+  ] as const)("restores %s / %s to %s before landing tracking", (result, step, expected) => {
+    const state = restoreFlow(result, step);
+    expect(state.step).toBe(expected);
+    if (state.step === "result") expect(state.origin).toBe("restored");
+  });
+
+  it.each(["analysis", "example"] as const)("keeps result origin %s", (origin) => {
+    const state = flowReducer(
+      { step: "loading", stage: "analyze" },
+      { type: "result", data, origin },
+    );
+    expect(state).toEqual({ step: "result", data, origin });
+  });
+});
 
 describe("axisBucket", () => {
   it.each([
@@ -109,6 +222,42 @@ describe("typeAnalyticsProps", () => {
 });
 
 describe("track", () => {
+  it("keeps result origin and capture count while stripping unknown properties", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_HOST", "");
+    vi.resetModules();
+    const debug = vi.spyOn(console, "debug").mockImplementation(() => {});
+    try {
+      const { track: freshTrack } = await import("../lib/analytics");
+      const base = typeAnalyticsProps({
+        typeCode: "OBCG",
+        axes: { direction: 72, length: 30, color: 88, stance: 55 },
+        badges: [],
+      });
+      for (const origin of ["analysis", "example", "restored"]) {
+        Reflect.apply(freshTrack, undefined, [
+          "result_view",
+          { ...base, origin, conversation: "private", count: 3 },
+        ]);
+      }
+      Reflect.apply(freshTrack, undefined, [
+        "capture_select",
+        { count: 2, origin: "analysis", filename: "private.png" },
+      ]);
+      expect(debug.mock.calls).toEqual([
+        ["[분석 이벤트]", "result_view", { ...base, origin: "analysis" }],
+        ["[분석 이벤트]", "result_view", { ...base, origin: "example" }],
+        ["[분석 이벤트]", "result_view", { ...base, origin: "restored" }],
+        ["[분석 이벤트]", "capture_select", { count: 2 }],
+      ]);
+    } finally {
+      debug.mockRestore();
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
+  });
+
   it("로그인 이벤트에서 ID와 닉네임을 제거한다", async () => {
     vi.stubEnv("NODE_ENV", "development");
     vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "");

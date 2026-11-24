@@ -5,7 +5,7 @@ import { InputStep, type ScreenshotSubmission } from "@/components/input-step";
 import { LandingStep } from "@/components/landing-step";
 import { LoadingStep } from "@/components/loading-step";
 import { ResultStep } from "@/components/result-step";
-import { track } from "@/lib/analytics";
+import { captureEntry, track } from "@/lib/analytics";
 import { maskPII } from "@/lib/core/mask";
 import {
   type AnalysisRequest,
@@ -15,7 +15,14 @@ import {
   responseSchema,
 } from "@/lib/core/schema";
 import { clearDraft } from "@/lib/draft";
-import { flowReducer, homeEvent, resultStorageKey, stepStorageKey } from "@/lib/flow";
+import {
+  type FlowState,
+  flowReducer,
+  homeEvent,
+  restoreFlow,
+  resultStorageKey,
+  stepStorageKey,
+} from "@/lib/flow";
 import { clearLastRequest, saveLastRequest } from "@/lib/last-request";
 import { compressScreenshot } from "@/lib/screenshot";
 
@@ -23,19 +30,20 @@ export default function Home() {
   const [state, dispatch] = useReducer(flowReducer, { step: "landing" });
   const activeRequest = useRef<AbortController | null>(null);
   useEffect(() => {
-    track("landing_view");
+    captureEntry();
+    // Count a landing visit only when no input or result step is reopened after a reload.
+    let restored: FlowState = { step: "landing" };
     try {
-      const saved = sessionStorage.getItem(resultStorageKey);
-      if (saved) {
-        const parsed = responseSchema.safeParse(JSON.parse(saved));
-        if (parsed.success) dispatch({ type: "result", data: parsed.data });
-      } else if (sessionStorage.getItem(stepStorageKey) === "input") {
-        dispatch({ type: "input" });
-      }
+      restored = restoreFlow(
+        sessionStorage.getItem(resultStorageKey),
+        sessionStorage.getItem(stepStorageKey),
+      );
     } catch (error) {
       if (!(error instanceof Error)) throw error;
-      // Unavailable storage or outdated JSON leaves the landing page usable.
+      // Unavailable storage leaves the landing page usable.
     }
+    if (restored.step === "landing") track("landing_view");
+    else dispatch({ type: "restore", state: restored });
     return () => activeRequest.current?.abort();
   }, []);
   useEffect(() => {
@@ -158,7 +166,7 @@ export default function Home() {
         if (data.result.partnerTemperature?.source === "code") track("temperature_fallback");
         clearDraft();
       }
-      dispatch({ type: "result", data });
+      dispatch({ type: "result", data, origin: analysisRequest ? "analysis" : "example" });
       // The paid report needs the masked request that produced this result; the example has none.
       if (body) saveLastRequest(body);
       else clearLastRequest();
@@ -215,6 +223,7 @@ export default function Home() {
       return (
         <ResultStep
           data={state.data}
+          origin={state.origin}
           onRestart={() => {
             try {
               sessionStorage.removeItem(resultStorageKey);

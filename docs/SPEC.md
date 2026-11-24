@@ -354,7 +354,9 @@ square safe zone; no character name, code, image or axes. Also a default OG imag
 
 ## Analytics events (`lib/analytics.ts`)
 
-`landing_view`, `cta_click` ({variant: main|example}), `input_mode_text`, `extract_submit`
+`landing_view` (only when the landing step is shown, not when input/result is restored),
+`cta_click` ({variant: main|example}), `input_mode_text`, `capture_select` ({count: valid images
+selected, 1-3}), `extract_submit`
 ({count}), `extract_success`, `extract_error` ({code}),
 `analyze_submit` ({source: text|screenshot, relationship: preset string|"custom"}), `analyze_success`,
 `analyze_error` ({code}), `result_view`, `share_kakao_click`, `share_link_copy`,
@@ -363,6 +365,14 @@ square safe zone; no character name, code, image or axes. Also a default OG imag
 `temperature_fallback` (real analyses whose partner temperature came from code),
 `temperature_detail_click` ({level}).
 
+`entry` is a tab-scoped super property (`shared`|`types`): landing `?from=` values overwrite
+`sessionStorage["talktivity:entry"]` (last touch), then `from` is removed from the URL.
+Register it on arrival and every PostHog initialization so all subsequent events retain
+attribution across reloads. Direct visits keep the stored value; invalid values are ignored.
+PostHog persistence remains `memory`; no analytics identifier is stored.
+
+`result_view.origin` is `analysis` for a completed real analysis, `example` for an example,
+and `restored` after reloading a stored result (including older results without origin).
 `result_view` additionally sends `partner_temperature` (1-5) and `temperature_source`
 (`llm`|`code`) when the result has a partner temperature.
 
