@@ -23,7 +23,7 @@ export default async function PricingPage() {
       : [
           {
             priceId: "fallback",
-            name: "상세 리포트 1회",
+            name: reportTitle,
             credits: 1,
             amount: fallbackTier,
             currency: "KRW",

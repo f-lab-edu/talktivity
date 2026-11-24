@@ -44,7 +44,7 @@ export function PaidReport({ report }: { readonly report: PaidReportContent }) {
     <article className="paid-report">
       <h2>{headline}</h2>
       <section>
-        <h3>상대방 속마음</h3>
+        <h3>상대 말투에 남은 힌트</h3>
         <p>{partnerMind.summary}</p>
         <h4>그렇게 본 근거</h4>
         <ol>

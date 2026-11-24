@@ -54,7 +54,7 @@ export function PartnerTemperature({
           scrollToPaywall();
         }}
       >
-        상대 반응 해석 리포트 보기
+        속마음 힌트 리포트 보기
       </Button>
     </section>
   );

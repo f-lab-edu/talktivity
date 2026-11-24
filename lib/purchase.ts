@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const reportTitle = "상대방 속마음 정밀 리포트 + 맞춤 답장 3개";
+export const reportTitle = "속마음 힌트 리포트 + 맞춤 답장 3개";
 export const fallbackTier = 4900;
 
 export const purchasePollIntervalMs = 2000;

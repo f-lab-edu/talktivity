@@ -328,11 +328,12 @@ Persist the last result in `sessionStorage` so refresh on the result step keeps 
    KakaoTalk/Instagram in-app browsers (UA detection) show a modal with the image and
    "이미지를 길게 눌러 저장하세요".
 6. **Paywall card** (`components/paywall-card.tsx`): one locked card per state (login, credit,
-   checkout, coming soon) with the report title and price, a one-line lead, five included items that
-   map to `paidReportSchema` fields or the saved-report page (상대 반응 해석, 근거 3가지와 조심할 점,
+   checkout, coming soon) with the report title ("속마음 힌트 리포트 + 맞춤 답장 3개"; `reportTitle`
+   in `lib/purchase.ts` before checkout, Supabase `products.name` at checkout) and price, a
+   one-line lead, five included items that map to `paidReportSchema` fields or the saved-report page (상대 반응 해석, 근거 3가지와 조심할 점,
    답장 3개와 의도, 다음 행동, 내 리포트 다시 보기), and the limit line "대화에 드러난 만큼만 해석해요.
    상대의 마음을 확정하지 않아요." The card must not promise anything the report does not contain. The
-   partner temperature button reads "상대 반응 해석 리포트 보기" and scrolls to this card.
+   partner temperature button reads "속마음 힌트 리포트 보기" and scrolls to this card.
 
 ## Policy pages
 
