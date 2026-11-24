@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "conversation": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 1500,
+      "pattern": "\\S[^\\r\\n]*\\r?\\n[\\s\\S]*\\S"
+    },
+    "relationship": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 20,
+      "pattern": "^[^\\r\\n]*$"
+    },
+    "mySpeaker": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    }
+  },
+  "required": [
+    "conversation",
+    "relationship"
+  ],
+  "additionalProperties": false
+}

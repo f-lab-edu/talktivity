@@ -1,0 +1,51 @@
+[
+  {
+    "secret": "golden-secret",
+    "payload": {
+      "typeCode": "OBCG",
+      "axes": {
+        "direction": 72,
+        "length": 38,
+        "color": 81,
+        "stance": 44
+      },
+      "badges": ["comedian", "emoji"],
+      "roastLines": [
+        "파스타 약속인 척, 사실은 플러팅 예약.",
+        "상대 취향 기억력만큼은 검색 엔진급.",
+        "친절과 설렘의 경계에서 오늘도 줄타기 중!"
+      ]
+    },
+    "token": "WzIsIk9CQ0ciLDcyLDM4LDgxLDQ0LFsiY29tZWRpYW4iLCJlbW9qaSJdLCLtjIzsiqTtg4Ag7JW97IaN7J24IOyymSwg7IKs7Iuk7J2AIO2UjOufrO2MhSDsmIjslb0uIiwi7IOB64yAIOy3qO2WpSDquLDslrXroKXrp4ztgbzsnYAg6rKA7IOJIOyXlOynhOq4iS4iLCLsuZzsoIjqs7wg7ISk66CY7J2YIOqyveqzhOyXkOyEnCDsmKTripjrj4Qg7KSE7YOA6riwIOykkSEiXQ.r6TeMctlOvFM5c7xpl8U1Q"
+  },
+  {
+    "secret": "한글-비밀키-🔑",
+    "payload": {
+      "typeCode": "RLMD",
+      "axes": {
+        "direction": 0,
+        "length": 100,
+        "color": 0,
+        "stance": 100
+      },
+      "badges": [],
+      "roastLines": ["안녕 👋", "ㅋㅋㅋ 한 줄에도 진심!", "따옴표 \"와\" 역슬래시 \\ 테스트"]
+    },
+    "token": "WzIsIlJMTUQiLDAsMTAwLDAsMTAwLFtdLCLslYjrhZUg8J-RiyIsIuOFi-OFi-OFiyDtlZwg7KSE7JeQ64-EIOynhOyLrCEiLCLrlLDsmLTtkZwgXCLsmYBcIiDsl63siqzrnpjsi5wgXFwg7YWM7Iqk7Yq4Il0.dtBHKkkysp-1Kka1blALjQ"
+  },
+  {
+    "secret": "boundary-secret",
+    "payload": {
+      "typeCode": "OLCD",
+      "axes": {
+        "direction": 50,
+        "length": 50,
+        "color": 50,
+        "stance": 50
+      },
+      "badges": ["emoji"],
+      "roastLines": ["a", "b", "c"]
+    },
+    "token": "WzIsIk9MQ0QiLDUwLDUwLDUwLDUwLFsiZW1vamkiXSwiYSIsImIiLCJjIl0.wT0oZqvWHoBqNFYbUa8Lwg"
+  }
+]

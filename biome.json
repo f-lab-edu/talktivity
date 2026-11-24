@@ -1,0 +1,19 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.6.7/schema.json",
+  "files": {
+    "includes": [
+      "**",
+      "!.next",
+      "!node_modules",
+      "!bun.lock",
+      "!docs",
+      "!contracts",
+      "!.omo",
+      "!.github"
+    ]
+  },
+  "formatter": { "indentStyle": "space", "lineWidth": 100 },
+  "css": { "parser": { "tailwindDirectives": true } },
+  "linter": { "enabled": true },
+  "assist": { "actions": { "source": { "organizeImports": "on" } } }
+}

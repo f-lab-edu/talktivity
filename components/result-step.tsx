@@ -1,0 +1,257 @@
+"use client";
+
+import { BookOpen, Copy, Download, Info, MessageCircle, RotateCcw } from "lucide-react";
+import Image from "next/image";
+import { useEffect, useId, useRef, useState } from "react";
+import { AxisBars } from "@/components/axis-bars";
+import { PartnerTemperature } from "@/components/partner-temperature";
+import { ResultCard } from "@/components/result-card";
+import { ResultPaywall } from "@/components/result-paywall";
+import { RoastRest } from "@/components/roast-rest";
+import { TypesEntryLink } from "@/components/types-entry-link";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { track, typeAnalyticsProps } from "@/lib/analytics";
+import { activePole, poleLabels } from "@/lib/core/axis-display";
+import { getCharacter } from "@/lib/core/characters";
+import { axisIds, type Confidence } from "@/lib/core/classification";
+import type { AnalysisResponse } from "@/lib/core/schema";
+import { sharePayloadFromResult } from "@/lib/core/share-token";
+import { getTypeGuide } from "@/lib/core/type-guide";
+import type { ResultOrigin } from "@/lib/flow";
+import { shareKakao } from "@/lib/kakao";
+import { imageUrl, resultUrl } from "@/lib/site";
+
+const confidenceLabels: Readonly<Record<Confidence, string>> = {
+  low: "낮음",
+  medium: "보통",
+  high: "높음",
+};
+
+export function ResultStep({
+  data,
+  origin,
+  onRestart,
+}: {
+  readonly data: AnalysisResponse;
+  readonly origin: ResultOrigin;
+  readonly onRestart: () => void;
+}) {
+  const card = useRef<HTMLDivElement>(null);
+  const [notice, setNotice] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [preview, setPreview] = useState<string | null>(null);
+  const explanationId = useId();
+  const traitsId = useId();
+  const character = getCharacter(data.result.typeCode);
+  const guide = getTypeGuide(data.result.typeCode);
+  const url = resultUrl(data.shareToken);
+  const payload = sharePayloadFromResult(data.result);
+  const temperatureLevel = data.result.partnerTemperature?.level;
+  const temperatureSource = data.result.partnerTemperature?.source;
+  useEffect(() => {
+    track("result_view", {
+      origin,
+      ...typeAnalyticsProps({
+        typeCode: data.result.typeCode,
+        axes: data.result.axes,
+        badges: data.result.badges,
+      }),
+      ...(temperatureLevel !== undefined && temperatureSource !== undefined
+        ? { partner_temperature: temperatureLevel, temperature_source: temperatureSource }
+        : {}),
+    });
+  }, [
+    data.result.axes,
+    data.result.badges,
+    data.result.typeCode,
+    origin,
+    temperatureLevel,
+    temperatureSource,
+  ]);
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(url);
+      track("share_link_copy");
+      setNotice("링크를 복사했어요. 친구에게 보내 보세요!");
+    } catch (error) {
+      if (error instanceof Error)
+        setNotice("링크를 복사하지 못했어요. 브라우저 권한을 확인해 주세요.");
+      else throw error;
+    }
+  }
+  async function share() {
+    track("share_kakao_click");
+    try {
+      const method = await shareKakao({ url, imageUrl: imageUrl(data.shareToken) });
+      if (method === "copy") {
+        track("share_link_copy");
+        setNotice("공유 링크를 복사했어요!");
+      }
+    } catch (error) {
+      if (!(error instanceof Error)) throw error;
+      if (error.name !== "AbortError")
+        setNotice("공유 창을 열지 못했어요. 링크 복사를 이용해 주세요.");
+    }
+  }
+  async function save() {
+    if (!card.current || busy) return;
+    setBusy(true);
+    try {
+      await document.fonts.ready;
+      const { toPng } = await import("html-to-image");
+      const png = await toPng(card.current, {
+        pixelRatio: 2,
+        cacheBust: false,
+        backgroundColor: "#f8f7f2",
+      });
+      if (/KAKAOTALK|Instagram/i.test(navigator.userAgent)) {
+        setPreview(png);
+        track("image_save", { method: "long-press" });
+        return;
+      }
+      const blob = await (await fetch(png)).blob();
+      const file = new File([blob], "톡티비티-내-톡-캐릭터.png", { type: "image/png" });
+      if (navigator.canShare?.({ files: [file] }) && navigator.share) {
+        await navigator.share({ files: [file], title: `나의 톡 캐릭터: ${character.name}` });
+        track("image_save", { method: "web-share" });
+      } else {
+        const anchor = document.createElement("a");
+        anchor.href = png;
+        anchor.download = file.name;
+        anchor.click();
+        track("image_save", { method: "download" });
+        setNotice("캐릭터 이미지를 저장했어요!");
+      }
+    } catch (error) {
+      if (!(error instanceof Error)) throw error;
+      if (error.name !== "AbortError")
+        setNotice("이미지 저장에 실패했어요. 링크 공유도 이용할 수 있어요.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <section className="result-step">
+      <div className="result-heading">
+        <Badge>분석 완료</Badge>
+        <p>숨길 수 없는 나의 톡 본캐</p>
+      </div>
+      <div ref={card}>
+        <ResultCard payload={payload} />
+      </div>
+      <RoastRest roastLines={payload.roastLines} />
+      <section className="result-traits" aria-labelledby={traitsId}>
+        <h2 id={traitsId}>톡에서 보이는 모습</h2>
+        <dl className="types-traits">
+          <div>
+            <dt>톡 강점</dt>
+            <dd>{guide.strength}</dd>
+          </div>
+          <div>
+            <dt>오해받기 쉬운 점</dt>
+            <dd>{guide.misread}</dd>
+          </div>
+        </dl>
+        <Button asChild variant="outline" className="full-width types-entry-button">
+          <TypesEntryLink source="result" href={`/types/${data.result.typeCode}`}>
+            <BookOpen size={17} aria-hidden="true" />
+            대화가 잘 통하는 유형·부딪히기 쉬운 유형 보기
+          </TypesEntryLink>
+        </Button>
+      </section>
+      <div className="share-actions">
+        <Button variant="kakao" onClick={() => void share()}>
+          <MessageCircle size={19} /> 카카오톡으로 공유하기
+        </Button>
+        <div className="two-buttons">
+          <Button variant="outline" onClick={() => void copy()}>
+            <Copy size={17} /> 링크 복사
+          </Button>
+          <Button variant="outline" disabled={busy} onClick={() => void save()}>
+            <Download size={17} /> {busy ? "이미지 만드는 중..." : "이미지 저장"}
+          </Button>
+        </div>
+      </div>
+      <p role="status" className="action-notice">
+        {notice}
+      </p>
+      <ResultPaywall />
+      {data.result.partnerTemperature && (
+        <PartnerTemperature temperature={data.result.partnerTemperature} />
+      )}
+      <section className="axis-explanation" aria-labelledby={explanationId}>
+        <h2 id={explanationId}>이렇게 분석했어요</h2>
+        <p className="analysis-meta">
+          신뢰도 {confidenceLabels[data.result.confidence]} · 분석한 대화 턴{" "}
+          {data.result.sampleSize}개
+        </p>
+        {data.result.confidence === "low" && (
+          <p className="confidence-notice">
+            <Info size={16} aria-hidden="true" />
+            분석 신뢰도가 낮아요. 대화를 조금 더 추가하면 더 정확해져요.
+          </p>
+        )}
+        <AxisBars typeCode={data.result.typeCode} axes={data.result.axes} />
+        <dl className="axis-reasons">
+          {axisIds.map((axisId) => {
+            const pole = activePole(data.result.typeCode, axisId);
+            return (
+              <div key={axisId}>
+                <dt>
+                  <span className="reason-letter">{pole}</span> {poleLabels[pole]}
+                </dt>
+                <dd>{data.result.axisReasons[axisId]}</dd>
+              </div>
+            );
+          })}
+        </dl>
+      </section>
+      <section className="reading-section">
+        <p className="eyebrow">한 겹 더 들여다보면</p>
+        <h2>우리 대화의 다음 장</h2>
+        <h3>대화 흐름 코멘트</h3>
+        <p>{data.result.reading.loveFortune}</p>
+        <h3>나를 위한 대화 팁</h3>
+        <ol>
+          {data.result.reading.tips.map((tip) => (
+            <li key={tip}>{tip}</li>
+          ))}
+        </ol>
+        <h3>이렇게 말해 보면 어때요?</h3>
+        <div className="recommended-lines">
+          {data.result.reading.recommendedLines.map((line) => (
+            <blockquote key={line}>{line}</blockquote>
+          ))}
+        </div>
+      </section>
+      <Button variant="ghost" className="full-width restart" onClick={onRestart}>
+        <RotateCcw size={16} /> 다른 대화도 분석하기
+      </Button>
+      <Dialog
+        open={preview !== null}
+        onOpenChange={(open) => {
+          if (!open) setPreview(null);
+        }}
+      >
+        <DialogContent>
+          <DialogTitle>이미지를 길게 눌러 저장하세요</DialogTitle>
+          <DialogDescription>
+            아래 캐릭터 카드를 길게 누르면 사진첩에 저장할 수 있어요.
+          </DialogDescription>
+          {preview && (
+            <Image
+              src={preview}
+              alt="저장할 나의 톡 캐릭터 카드"
+              className="save-preview"
+              width={800}
+              height={1300}
+              unoptimized
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+    </section>
+  );
+}

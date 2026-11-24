@@ -1,0 +1,306 @@
+.roast-rest {
+  display: grid;
+  gap: 8px;
+  margin: 20px 2px 0;
+  font-size: 14px;
+  line-height: 1.8;
+  text-align: center;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+.temperature {
+  margin: 24px 2px 0;
+  padding: 20px 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+}
+.result-traits {
+  margin: 24px 2px 0;
+}
+.result-traits h2 {
+  margin-bottom: 10px;
+  font-size: 16px;
+  letter-spacing: -0.4px;
+}
+.temperature h2 {
+  font-size: 16px;
+  letter-spacing: -0.4px;
+}
+.temperature-gauge {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+}
+.temperature-step {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  font-size: 24px;
+  line-height: 1;
+}
+.temperature-empty {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--line);
+}
+.temperature-reason {
+  margin-top: 12px;
+  font-size: 14px;
+  line-height: 1.8;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.temperature-note {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--muted);
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.temperature-detail {
+  margin-top: 8px;
+  min-height: 44px;
+  padding-inline: 0;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.temperature-detail:hover {
+  background: transparent;
+}
+.axis-explanation {
+  margin: 32px 2px 0;
+}
+.axis-explanation h2 {
+  font-size: 23px;
+  letter-spacing: -0.8px;
+}
+.analysis-meta {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.confidence-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--accent) 30%, var(--surface));
+  font-size: 13px;
+  line-height: 1.7;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.confidence-notice svg {
+  flex-shrink: 0;
+  margin-top: calc((1lh - 16px) / 2);
+}
+.axes {
+  display: grid;
+  gap: 12px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.axis-head {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.axis-pole {
+  white-space: nowrap;
+}
+.axis-pole:last-child {
+  grid-column: 3;
+  justify-self: end;
+}
+.axis-pole[data-active="true"] {
+  color: var(--foreground);
+  font-family: var(--font-pretendard), Arial, sans-serif;
+  font-weight: 700;
+}
+.axis-letter {
+  font-family: var(--font-pretendard), Arial, sans-serif;
+  font-weight: 700;
+}
+.axis-boundary {
+  grid-column: 2;
+  padding: 0 8px;
+  border-radius: 100px;
+  background: var(--line);
+  color: var(--foreground);
+  font-size: 11px;
+  font-weight: 700;
+}
+.axis-bar {
+  position: relative;
+  height: 8px;
+  border-radius: 100px;
+  background: var(--line);
+  overflow: hidden;
+}
+.axis-fill {
+  position: absolute;
+  inset: 0;
+  background: var(--foreground);
+}
+/* The active side always holds 50% or more, so the centre notch always lands on the fill. */
+.axis-bar::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background: var(--surface);
+}
+.axis-reasons {
+  display: grid;
+  gap: 16px;
+  margin: 24px 0 0;
+}
+.axis-reasons > div {
+  display: grid;
+  gap: 4px;
+}
+.axis-reasons dt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-pretendard), Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+}
+.reason-letter {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 45%, var(--surface));
+  font-size: 12px;
+}
+.axis-reasons dd {
+  margin: 0 0 0 32px;
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--muted);
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.share-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 28px;
+}
+.two-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.two-buttons .button {
+  font-size: 12px;
+  padding-inline: 8px;
+}
+.action-notice {
+  color: #52672d;
+  min-height: 26px;
+  font-size: 12px;
+  text-align: center;
+  padding-top: 9px;
+}
+.paywall:focus {
+  outline: none;
+}
+.paywall {
+  margin-top: 32px;
+  padding-top: 28px;
+  border-top: 1px solid var(--line);
+}
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.section-label h2 {
+  font-size: 18px;
+  letter-spacing: -0.5px;
+}
+.teaser-card {
+  display: grid;
+  gap: 14px;
+  background: #f0f0e9;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 18px 14px 14px;
+  margin-top: 12px;
+  font-size: 12px;
+}
+.teaser-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.teaser-head svg {
+  flex-shrink: 0;
+  color: #737d64;
+}
+.teaser-head span {
+  flex: 1;
+}
+.teaser-head strong {
+  white-space: nowrap;
+  font-size: 12px;
+}
+.teaser-lead {
+  font-size: 13px;
+  line-height: 1.5;
+}
+.teaser-includes {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  line-height: 1.45;
+}
+.teaser-includes li {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+.teaser-includes svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #737d64;
+}
+.teaser-limit {
+  color: var(--muted);
+  font-size: 11px;
+}
+.checkout-notice {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+  text-align: center;
+}
+.checkout-notice a {
+  text-decoration: underline;
+}
+.restart {
+  margin-top: 22px;
+}

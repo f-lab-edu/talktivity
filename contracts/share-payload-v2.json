@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "typeCode": {
+      "type": "string",
+      "enum": [
+        "OLCD",
+        "OLCG",
+        "OLMD",
+        "OLMG",
+        "OBCD",
+        "OBCG",
+        "OBMD",
+        "OBMG",
+        "RLCD",
+        "RLCG",
+        "RLMD",
+        "RLMG",
+        "RBCD",
+        "RBCG",
+        "RBMD",
+        "RBMG"
+      ]
+    },
+    "axes": {
+      "type": "object",
+      "properties": {
+        "direction": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "length": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "color": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "stance": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        }
+      },
+      "required": [
+        "direction",
+        "length",
+        "color",
+        "stance"
+      ],
+      "additionalProperties": false
+    },
+    "badges": {
+      "maxItems": 2,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "comedian",
+          "emoji"
+        ]
+      }
+    },
+    "roastLines": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        }
+      ],
+      "items": false,
+      "minItems": 3,
+      "maxItems": 3
+    }
+  },
+  "required": [
+    "typeCode",
+    "axes",
+    "badges",
+    "roastLines"
+  ],
+  "additionalProperties": false
+}
