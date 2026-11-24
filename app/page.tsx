@@ -5,7 +5,7 @@ import { InputStep, type ScreenshotSubmission } from "@/components/input-step";
 import { LandingStep } from "@/components/landing-step";
 import { LoadingStep } from "@/components/loading-step";
 import { ResultStep } from "@/components/result-step";
-import { captureEntry, track } from "@/lib/analytics";
+import { consumeLandingQuery, track } from "@/lib/analytics";
 import { maskPII } from "@/lib/core/mask";
 import {
   type AnalysisRequest,
@@ -26,11 +26,26 @@ import {
 import { clearLastRequest, saveLastRequest } from "@/lib/last-request";
 import { compressScreenshot } from "@/lib/screenshot";
 
+// Starting a new analysis drops the previous result so a reload reopens the input step.
+function clearResult() {
+  try {
+    sessionStorage.removeItem(resultStorageKey);
+  } catch (error) {
+    if (!(error instanceof Error)) throw error;
+  }
+  clearLastRequest();
+}
+
 export default function Home() {
   const [state, dispatch] = useReducer(flowReducer, { step: "landing" });
   const activeRequest = useRef<AbortController | null>(null);
   useEffect(() => {
-    captureEntry();
+    // The type guide's CTA links here with `step=input` to skip the landing step.
+    if (consumeLandingQuery().openInput) {
+      clearResult();
+      dispatch({ type: "input" });
+      return () => activeRequest.current?.abort();
+    }
     // Count a landing visit only when no input or result step is reopened after a reload.
     let restored: FlowState = { step: "landing" };
     try {
@@ -225,12 +240,7 @@ export default function Home() {
           data={state.data}
           origin={state.origin}
           onRestart={() => {
-            try {
-              sessionStorage.removeItem(resultStorageKey);
-            } catch (error) {
-              if (!(error instanceof Error)) throw error;
-            }
-            clearLastRequest();
+            clearResult();
             dispatch({ type: "input" });
           }}
         />

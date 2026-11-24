@@ -373,6 +373,8 @@ selected, 1-3}), `extract_submit`
 Register it on arrival and every PostHog initialization so all subsequent events retain
 attribution across reloads. Direct visits keep the stored value; invalid values are ignored.
 PostHog persistence remains `memory`; no analytics identifier is stored.
+The type guide CTA links to `/?from=types&step=input`: `step=input` opens the input step directly
+(clearing any stored result, no `landing_view`) and is removed from the URL as well.
 
 `result_view.origin` is `analysis` for a completed real analysis, `example` for an example,
 and `restored` after reloading a stored result (including older results without origin).

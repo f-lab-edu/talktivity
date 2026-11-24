@@ -203,19 +203,29 @@ function storedEntry(): "shared" | "types" | undefined {
   }
 }
 
-// Called on the landing route, including SPA arrivals after the SDK has initialized.
-export function captureEntry(): void {
+// Called on the landing route, including SPA arrivals after the SDK has initialized. A valid
+// `from` sets the tab's entry and `step=input` asks to open the input step; both leave the URL.
+export function consumeLandingQuery(): { readonly openInput: boolean } {
   const url = new URL(window.location.href);
   const entry = parseEntry(url.searchParams.get("from"));
-  if (!entry) return;
-  try {
-    window.sessionStorage.setItem(entryStorageKey, entry);
-  } catch (error) {
-    if (!(error instanceof DOMException)) throw error;
+  const openInput = url.searchParams.get("step") === "input";
+  if (entry) {
+    try {
+      window.sessionStorage.setItem(entryStorageKey, entry);
+    } catch (error) {
+      if (!(error instanceof DOMException)) throw error;
+    }
+    url.searchParams.delete("from");
+    if (client) void client.then((posthog) => posthog.register({ entry }));
   }
-  url.searchParams.delete("from");
-  window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
-  if (client) void client.then((posthog) => posthog.register({ entry }));
+  if (openInput) url.searchParams.delete("step");
+  if (entry || openInput)
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${url.pathname}${url.search}${url.hash}`,
+    );
+  return { openInput };
 }
 
 // `?internal=1` marks this device as internal, `?internal=0` clears it, anything else keeps the stored state.

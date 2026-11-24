@@ -45,7 +45,7 @@ describe("entry attribution", () => {
       try {
         const analytics = await import("../lib/analytics");
         if (timing === "after") await analytics.analyticsDistinctId();
-        analytics.captureEntry();
+        analytics.consumeLandingQuery();
         analytics.track("landing_view");
         await analytics.analyticsDistinctId();
         expect(stored.get("talktivity:entry")).toBe(entry);
@@ -86,10 +86,33 @@ describe("entry attribution", () => {
       history: { replaceState },
     });
     try {
-      const { captureEntry } = await import("../lib/analytics");
-      captureEntry();
+      const { consumeLandingQuery } = await import("../lib/analytics");
+      expect(consumeLandingQuery()).toEqual({ openInput: false });
       expect(setItem).not.toHaveBeenCalled();
       expect(replaceState).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllGlobals();
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
+  });
+
+  it("opens the input step from the type guide CTA and cleans the URL", async () => {
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_HOST", "");
+    vi.resetModules();
+    const setItem = vi.fn();
+    const history = { state: null, replaceState: vi.fn() };
+    vi.stubGlobal("window", {
+      location: new URL("https://talktivity.example/?from=types&step=input&utm=kakao#keep"),
+      sessionStorage: { setItem },
+      history,
+    });
+    try {
+      const { consumeLandingQuery } = await import("../lib/analytics");
+      expect(consumeLandingQuery()).toEqual({ openInput: true });
+      expect(setItem).toHaveBeenCalledWith("talktivity:entry", "types");
+      expect(history.replaceState).toHaveBeenCalledWith(null, "", "/?utm=kakao#keep");
     } finally {
       vi.unstubAllGlobals();
       vi.unstubAllEnvs();
