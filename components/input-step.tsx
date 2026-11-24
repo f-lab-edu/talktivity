@@ -2,6 +2,7 @@
 
 import { ArrowLeft, ArrowRight, ImagePlus, ShieldCheck } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { type PointerEvent, useEffect, useRef, useState } from "react";
 import { RelationshipField } from "@/components/relationship-field";
 import { Button } from "@/components/ui/button";
@@ -323,7 +324,11 @@ export function InputStep({
         )}
         <RelationshipField value={relationship} onChange={setRelationship} />
         <p id="privacy" className="privacy">
-          <ShieldCheck size={16} /> 캡처와 대화는 저장하지 않고, 이름은 '상대'로 바꿔 분석해요.
+          <ShieldCheck size={16} />
+          <span>
+            캡처와 대화는 서버에 저장하지 않아요. 분석을 위해 AI에 전달되며, 붙여 넣은 대화는
+            연락처를 가리고 이름을 '나·상대'로 바꿔 보내요. <Link href="/privacy">자세히</Link>
+          </span>
         </p>
         <p id="input-error" className="error-message" role="alert">
           {error ?? apiError}

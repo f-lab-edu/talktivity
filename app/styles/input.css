@@ -119,6 +119,13 @@ fieldset {
   font-size: 11px;
   margin-top: 24px;
 }
+.privacy svg {
+  flex-shrink: 0;
+}
+.privacy a {
+  color: inherit;
+  text-decoration: underline;
+}
 .error-message {
   min-height: 24px;
   margin: 10px 0;
