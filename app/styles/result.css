@@ -16,6 +16,14 @@
   border-radius: 16px;
   background: var(--surface);
 }
+.result-traits {
+  margin: 24px 2px 0;
+}
+.result-traits h2 {
+  margin-bottom: 10px;
+  font-size: 16px;
+  letter-spacing: -0.4px;
+}
 .temperature h2 {
   font-size: 16px;
   letter-spacing: -0.4px;

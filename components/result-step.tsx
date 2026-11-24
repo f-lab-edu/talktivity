@@ -18,6 +18,7 @@ import { getCharacter } from "@/lib/core/characters";
 import { axisIds, type Confidence } from "@/lib/core/classification";
 import type { AnalysisResponse } from "@/lib/core/schema";
 import { sharePayloadFromResult } from "@/lib/core/share-token";
+import { getTypeGuide } from "@/lib/core/type-guide";
 import type { ResultOrigin } from "@/lib/flow";
 import { shareKakao } from "@/lib/kakao";
 import { imageUrl, resultUrl } from "@/lib/site";
@@ -42,7 +43,9 @@ export function ResultStep({
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const explanationId = useId();
+  const traitsId = useId();
   const character = getCharacter(data.result.typeCode);
+  const guide = getTypeGuide(data.result.typeCode);
   const url = resultUrl(data.shareToken);
   const payload = sharePayloadFromResult(data.result);
   const temperatureLevel = data.result.partnerTemperature?.level;
@@ -138,12 +141,26 @@ export function ResultStep({
       <div ref={card}>
         <ResultCard payload={payload} />
       </div>
-      <Button asChild variant="outline" className="full-width types-entry-button">
-        <TypesEntryLink source="result" href={`/types/${data.result.typeCode}`}>
-          <BookOpen size={17} aria-hidden="true" />내 유형 도감에서 자세히 보기
-        </TypesEntryLink>
-      </Button>
       <RoastRest roastLines={payload.roastLines} />
+      <section className="result-traits" aria-labelledby={traitsId}>
+        <h2 id={traitsId}>톡에서 보이는 모습</h2>
+        <dl className="types-traits">
+          <div>
+            <dt>톡 강점</dt>
+            <dd>{guide.strength}</dd>
+          </div>
+          <div>
+            <dt>오해받기 쉬운 점</dt>
+            <dd>{guide.misread}</dd>
+          </div>
+        </dl>
+        <Button asChild variant="outline" className="full-width types-entry-button">
+          <TypesEntryLink source="result" href={`/types/${data.result.typeCode}`}>
+            <BookOpen size={17} aria-hidden="true" />
+            대화가 잘 통하는 유형·부딪히기 쉬운 유형 보기
+          </TypesEntryLink>
+        </Button>
+      </section>
       {data.result.partnerTemperature && (
         <PartnerTemperature temperature={data.result.partnerTemperature} />
       )}
