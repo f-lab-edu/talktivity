@@ -325,9 +325,12 @@ Persist the last result in `sessionStorage` so refresh on the result step keeps 
    `navigator.share({ files })` when `canShare` supports files; else `<a download>`; and in
    KakaoTalk/Instagram in-app browsers (UA detection) show a modal with the image and
    "이미지를 길게 눌러 저장하세요".
-6. **Paywall teaser**: two locked cards with Lock icon - "상대방 속마음 정밀 리포트" 1,000원,
-   "대화가 절대로 안 끊기는 맞춤 답장 3개 추천" 1,900원. Click opens a dialog
-   "곧 오픈될 서비스입니다! (1차 MVP 테스트 중)".
+6. **Paywall card** (`components/paywall-card.tsx`): one locked card per state (login, credit,
+   checkout, coming soon) with the report title and price, a one-line lead, five included items that
+   map to `paidReportSchema` fields or the saved-report page (상대 반응 해석, 근거 3가지와 조심할 점,
+   답장 3개와 의도, 다음 행동, 내 리포트 다시 보기), and the limit line "대화에 드러난 만큼만 해석해요.
+   상대의 마음을 확정하지 않아요." The card must not promise anything the report does not contain. The
+   partner temperature button reads "상대 반응 해석 리포트 보기" and scrolls to this card.
 
 ## Policy pages
 

@@ -54,7 +54,7 @@ export function PartnerTemperature({
           scrollToPaywall();
         }}
       >
-        왜 이 온도인지 자세히 보기
+        상대 반응 해석 리포트 보기
       </Button>
     </section>
   );

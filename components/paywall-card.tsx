@@ -1,6 +1,6 @@
 "use client";
 
-import { LockKeyhole } from "lucide-react";
+import { Check, LockKeyhole } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,15 @@ export type PaywallCard = {
   readonly label: string;
   readonly action: CardAction;
 };
+
+// Each line maps to a `paidReportSchema` field or the saved-report page; promise nothing else.
+const reportIncludes = [
+  "대화에서 보이는 상대 반응 해석",
+  "그렇게 본 근거 3가지와 조심하면 좋은 점",
+  "바로 복사해 보낼 답장 3개 (답장마다 의도 설명)",
+  "다음에 해 볼 행동 한 가지",
+  "내 리포트에서 다시 보기",
+] as const;
 
 // `tier` is the price in won, the key paywall events have always used.
 export function buildCards(
@@ -99,6 +108,18 @@ export function PaywallCardView({
         <span>{card.title}</span>
         <strong>{card.price}</strong>
       </div>
+      <p className="teaser-lead">
+        방금 분석한 대화로 상대 반응을 해석하고, 보낼 답장까지 만들어 드려요.
+      </p>
+      <ul className="teaser-includes">
+        {reportIncludes.map((item) => (
+          <li key={item}>
+            <Check size={14} aria-hidden="true" />
+            {item}
+          </li>
+        ))}
+      </ul>
+      <p className="teaser-limit">대화에 드러난 만큼만 해석해요. 상대의 마음을 확정하지 않아요.</p>
       <Button className="full-width" disabled={disabled || busy} onClick={() => onClick(card)}>
         {busy ? "잠시만요..." : card.label}
       </Button>

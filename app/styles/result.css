@@ -257,6 +257,32 @@
   white-space: nowrap;
   font-size: 12px;
 }
+.teaser-lead {
+  font-size: 13px;
+  line-height: 1.5;
+}
+.teaser-includes {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  line-height: 1.45;
+}
+.teaser-includes li {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+.teaser-includes svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #737d64;
+}
+.teaser-limit {
+  color: var(--muted);
+  font-size: 11px;
+}
 .checkout-notice {
   color: var(--muted);
   font-size: 11px;
