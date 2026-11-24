@@ -311,10 +311,10 @@ Persist the last result in `sessionStorage` so refresh on the result step keeps 
    large, badges, small type code) - contains no conversation text; the other two roast lines
    below it; "톡에서 보이는 모습" with the type's `strength` and `misread` from `lib/core/type-guide.ts`
    and a button "대화가 잘 통하는 유형·부딪히기 쉬운 유형 보기" to `/types/[code]`
-   (`types_entry_click{source:result}`); the partner temperature gauge ("상대 대화 온도", 5 steps, reason, link that scrolls to
-   the paid report area) when present; "이렇게 분석했어요" with the four axis bars, confidence and
-   axis reasons; the reading section (대화 흐름 코멘트, 팁, 추천 대화법); share/save buttons;
-   paywall. Save image captures only the meme card.
+   (`types_entry_click{source:result}`); share/save buttons; paywall; the partner temperature gauge
+   ("상대 대화 온도", 5 steps, reason, link that scrolls to the paid report area above) when present;
+   "이렇게 분석했어요" with the four axis bars, confidence and axis reasons; the reading section
+   (대화 흐름 코멘트, 팁, 추천 대화법); restart. Save image captures only the meme card.
 5. **Share**: `lib/kakao.ts` loads the SDK via `next/script`, `Kakao.init` once, then
    `Kakao.Share.sendDefault` feed template:
    - title and description from `lib/share-meta.ts` (`[톡티비티] 나 무슨 유형 나왔게? 맞혀 봐`);

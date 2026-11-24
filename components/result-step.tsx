@@ -161,6 +161,23 @@ export function ResultStep({
           </TypesEntryLink>
         </Button>
       </section>
+      <div className="share-actions">
+        <Button variant="kakao" onClick={() => void share()}>
+          <MessageCircle size={19} /> 카카오톡으로 공유하기
+        </Button>
+        <div className="two-buttons">
+          <Button variant="outline" onClick={() => void copy()}>
+            <Copy size={17} /> 링크 복사
+          </Button>
+          <Button variant="outline" disabled={busy} onClick={() => void save()}>
+            <Download size={17} /> {busy ? "이미지 만드는 중..." : "이미지 저장"}
+          </Button>
+        </div>
+      </div>
+      <p role="status" className="action-notice">
+        {notice}
+      </p>
+      <ResultPaywall />
       {data.result.partnerTemperature && (
         <PartnerTemperature temperature={data.result.partnerTemperature} />
       )}
@@ -209,23 +226,6 @@ export function ResultStep({
           ))}
         </div>
       </section>
-      <div className="share-actions">
-        <Button variant="kakao" onClick={() => void share()}>
-          <MessageCircle size={19} /> 카카오톡으로 공유하기
-        </Button>
-        <div className="two-buttons">
-          <Button variant="outline" onClick={() => void copy()}>
-            <Copy size={17} /> 링크 복사
-          </Button>
-          <Button variant="outline" disabled={busy} onClick={() => void save()}>
-            <Download size={17} /> {busy ? "이미지 만드는 중..." : "이미지 저장"}
-          </Button>
-        </div>
-      </div>
-      <p role="status" className="action-notice">
-        {notice}
-      </p>
-      <ResultPaywall />
       <Button variant="ghost" className="full-width restart" onClick={onRestart}>
         <RotateCcw size={16} /> 다른 대화도 분석하기
       </Button>
